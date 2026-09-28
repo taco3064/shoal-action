@@ -1,0 +1,125 @@
+{
+  "formatVersion": 1,
+  "files": [
+    {
+      "path": "loader.mjs",
+      "sha256": "d499d4297d149bd87b89e03fc3ee4c35a58a614b458922a19429b98de75d5ced",
+      "size": 1398
+    },
+    {
+      "path": "main.mjs",
+      "sha256": "1daf76537bc1d03997d50bc380c7d0343ccc73623130b6514f2deb4061465f10",
+      "size": 2043
+    },
+    {
+      "path": "protocol/review-v1.json",
+      "sha256": "cb48872de2192a3da2602740ece32c09b2fdbd9866dffdfd20ab600032528ff3",
+      "size": 1699
+    },
+    {
+      "path": "src/action/index.js",
+      "sha256": "ac70c8f2c20d104b9f7ac2b54b25334326279d0295883f2cc117cc76d2a5a856",
+      "size": 102
+    },
+    {
+      "path": "src/action/reviewer_summary_action.js",
+      "sha256": "adb22bbfe23ec2dc34c867de7baa2466d8ab15fa63d3b6f13710a75b69354229",
+      "size": 1188
+    },
+    {
+      "path": "src/action/services/github_client/github_api_response.js",
+      "sha256": "e48120aebbfb0bcbe4e70f99043e8338946d5ed9a370b316423edcbecb413b87",
+      "size": 3984
+    },
+    {
+      "path": "src/action/services/github_client/github_client.js",
+      "sha256": "54e65734b89da03f54ed25f3d1fc2314566402bad2246923d0c624a71dd8d60d",
+      "size": 10173
+    },
+    {
+      "path": "src/action/services/github_client/index.js",
+      "sha256": "63f22a7a26a8b537952c023b9919b51c6be3c30d06d7bbb7a17d977a80c64521",
+      "size": 65
+    },
+    {
+      "path": "src/action/services/github_client/types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "size": 11
+    },
+    {
+      "path": "src/action/services/reviewer_summary/index.js",
+      "sha256": "dc83b72e8dcfd4bdc463fe596db8584e7d9ef0a91e7145d636073aa5330bb852",
+      "size": 61
+    },
+    {
+      "path": "src/action/services/reviewer_summary/review_lifecycle.js",
+      "sha256": "5ad5a4964a76d5ff03cdd96929eecfcb10eb10dc7742ec97231da231e227a499",
+      "size": 1672
+    },
+    {
+      "path": "src/action/services/reviewer_summary/reviewer_summary.js",
+      "sha256": "5a6e860b03239b4b9b10d6ccd7ab878d3aa30f948cd8c161827da8aeacdf87b3",
+      "size": 10480
+    },
+    {
+      "path": "src/action/services/reviewer_summary/types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "size": 11
+    },
+    {
+      "path": "src/action/types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "size": 11
+    },
+    {
+      "path": "src/protocol/services/review_protocol/contract.js",
+      "sha256": "c124a19f8471587fee12d469708b9d82258c4fb94e2fb16c3da31dae08a6446e",
+      "size": 131
+    },
+    {
+      "path": "src/protocol/services/review_protocol/index.js",
+      "sha256": "385b16b473a694543481af35d05d565da574b9af983c7764cb07a65e29b1baf1",
+      "size": 181
+    },
+    {
+      "path": "src/protocol/services/review_protocol/initial_review_evidence.js",
+      "sha256": "92669f145daa6c85c718a93da77286fe023e7c3cc7f86aeb95d239283d6e363d",
+      "size": 2073
+    },
+    {
+      "path": "src/protocol/services/review_protocol/request_payload.js",
+      "sha256": "fcef197573ab2688073a3e7a73b8fcc0e49669075c34890b2c5d6ff39823756e",
+      "size": 2028
+    },
+    {
+      "path": "src/protocol/services/review_protocol/review_protocol.js",
+      "sha256": "56f3972655b6cd48e21cd1d0d2360419e91e97b7bea0b0abf236b4b7e6b5ffed",
+      "size": 9655
+    },
+    {
+      "path": "src/protocol/services/review_protocol/rfc3339.js",
+      "sha256": "d98992b42cba54d435cbf06c3f53d1d08f9622cc93c34b848bed0d7e3e98bfd7",
+      "size": 1324
+    },
+    {
+      "path": "src/protocol/services/review_protocol/types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "size": 11
+    },
+    {
+      "path": "src/protocol/services/reviewer_summary_schema/index.js",
+      "sha256": "95deb75902191a1d8c2f432c28287139373da8e8f678aae4b958048ba6c9bc77",
+      "size": 141
+    },
+    {
+      "path": "src/protocol/services/reviewer_summary_schema/reviewer_summary_schema.js",
+      "sha256": "cd7c34fc96f6903a5bba9383b0f98af06ba13d024f3190cb8149373296ccc9f0",
+      "size": 3955
+    },
+    {
+      "path": "src/protocol/services/reviewer_summary_schema/types.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "size": 11
+    }
+  ]
+}

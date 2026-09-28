@@ -1,0 +1,22 @@
+name: Shoal Reviewer Summary
+description: Compute the deterministic Shoal Reviewer Summary from public Reviewer Node state.
+author: Taco Chang
+inputs:
+  network_root_repository_id:
+    description: Stable GitHub repository ID of the canonical Shoal Network Root.
+    required: true
+  network_root_repository_name:
+    description: Repository name of the canonical Shoal Network Root.
+    required: true
+  reviewer_node_repository:
+    description: Reviewer Node repository in owner/name form. Defaults to GITHUB_REPOSITORY.
+    required: false
+  github_token:
+    description: Repository-scoped GitHub token used for read-only Summary computation.
+    required: false
+runs:
+  using: node24
+  main: dist/main.mjs
+branding:
+  icon: check-circle
+  color: blue

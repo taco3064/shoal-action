@@ -1,0 +1,16 @@
+{
+  "name": "shoal-action-distribution",
+  "version": "0.0.0-private",
+  "private": true,
+  "type": "module",
+  "description": "Thin distribution repository for the Shoal Reviewer Summary GitHub Action.",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "verify": "node scripts/verify-distribution.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "negative": "node scripts/negative-controls.mjs",
+    "verify:source": "node scripts/verify-distribution.mjs --source-package"
+  }
+}

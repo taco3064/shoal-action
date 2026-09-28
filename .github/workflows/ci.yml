@@ -1,0 +1,75 @@
+name: Verify distribution
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Verify exact event candidate
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version-file: '.nvmrc'
+      - run: npm run verify
+      - run: npm run smoke
+      - run: npm run negative
+
+  source-correspondence:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout distribution candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version-file: '.nvmrc'
+      - name: Resolve exact source commit from accepted source tree
+        id: source
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node scripts/resolve-source-commit.mjs
+      - name: Checkout exact shoal-app source commit
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ steps.source.outputs.source_commit }}
+        run: |
+          git init .source/shoal-app
+          git -C .source/shoal-app remote add origin https://github.com/taco3064/shoal-app.git
+          git -C .source/shoal-app fetch --depth=1 origin "$SOURCE_COMMIT"
+          git -C .source/shoal-app checkout --detach FETCH_HEAD
+      - name: Verify source checkout tree
+        run: node scripts/verify-source-checkout.mjs .source/shoal-app
+      - name: Reproduce source package
+        working-directory: .source/shoal-app
+        run: |
+          npm ci
+          npm run package:action
+      - name: Verify byte-identical source correspondence
+        run: node scripts/verify-distribution.mjs --source-package .source/shoal-app/dist/action-package
