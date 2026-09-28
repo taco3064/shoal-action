@@ -32,7 +32,7 @@ exact shoal-app source commit
 → byte-identical shoal-action/dist
 ```
 
-`source-package.json` records the accepted source candidate tree and package-manifest digest. Delivery records the exact committed `shoal-app` source SHA in the distribution PR body as `Shoal-Source-Commit: <FULL_SHA>`. Pull-request CI verifies that the named commit has the accepted source tree, checks out that exact commit, reproduces the package, and requires every generated file including `package-manifest.json` to be byte-identical to this repository's `dist/` tree.
+`source-package.json` is the committed provenance authority. It records the exact `shoal-app` source commit, that commit's expected tree, the package command, and the package-manifest digest. PR, main/push, and release verification all resolve that tracked source commit, verify its tree, reproduce the package, and require every generated file including `package-manifest.json` to be byte-identical to this repository's `dist/` tree. PR or release text may mirror the source SHA as human-readable evidence, but it is not a trust input.
 
 Local distribution checks:
 
