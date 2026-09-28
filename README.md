@@ -52,6 +52,6 @@ The verifier rejects payload file-set drift, digest mismatch, a hand-edited gene
 
 ## Release and Marketplace publication
 
-Tags matching `v*` run the distribution verification and create a GitHub release. Component release versions are independent from Shoal Protocol and Reviewer Summary schema versions.
+Tags matching `v*` run deterministic distribution and exact-source verification. GitHub release creation and Marketplace publication are owner-authority steps performed through GitHub's release UI after the tag verification succeeds. Component release versions are independent from Shoal Protocol and Reviewer Summary schema versions.
 
-GitHub Marketplace publication may additionally require repository-owner account actions such as accepting the Marketplace Developer Agreement and satisfying GitHub account security requirements. Those owner-authority steps are not bypassed or claimed as automated by this repository.
+GitHub Marketplace publication may additionally require repository-owner account actions such as accepting the Marketplace Developer Agreement and satisfying GitHub account security requirements. Those owner-authority steps are not bypassed or claimed as automated by this repository. The release workflow intentionally does not create the GitHub release so it cannot race the Marketplace UI release flow.
