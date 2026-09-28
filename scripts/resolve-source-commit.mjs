@@ -6,12 +6,17 @@ const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const provenance = JSON.parse(
   await readFile(resolve(repositoryRoot, 'source-package.json'), 'utf8'),
 );
-const prBody = process.env.PR_BODY || '';
-const match = prBody.match(/^Shoal-Source-Commit:\s*`?([0-9a-f]{40})`?\s*$/imu);
-if (!match) {
-  throw new Error('PR body must contain `Shoal-Source-Commit: <40-character SHA>`.');
+
+if (
+  !provenance
+  || provenance.sourceRepository !== 'taco3064/shoal-app'
+  || !/^[0-9a-f]{40}$/u.test(provenance.sourceCommit)
+  || !/^[0-9a-f]{40}$/u.test(provenance.sourceCandidateTree)
+) {
+  throw new Error('Tracked source provenance is malformed.');
 }
-const sourceCommit = match[1];
+
+const sourceCommit = provenance.sourceCommit;
 const apiBase = process.env.GITHUB_API_URL || 'https://api.github.com';
 const token = process.env.GITHUB_TOKEN || '';
 const response = await fetch(
@@ -24,9 +29,11 @@ const response = await fetch(
     },
   },
 );
+
 if (!response.ok) {
   throw new Error(`Failed to read source commit ${sourceCommit}: GitHub returned ${response.status}.`);
 }
+
 const commit = await response.json();
 const tree = commit?.commit?.tree?.sha;
 if (tree !== provenance.sourceCandidateTree) {
@@ -34,7 +41,11 @@ if (tree !== provenance.sourceCandidateTree) {
     `Source commit tree mismatch: expected ${provenance.sourceCandidateTree}, got ${tree || 'missing'}.`,
   );
 }
-console.log(`Resolved exact shoal-app source commit ${sourceCommit} with candidate tree ${tree}.`);
+
+console.log(
+  `Resolved exact shoal-app source commit ${sourceCommit} with candidate tree ${tree}.`,
+);
+
 if (process.env.GITHUB_OUTPUT) {
   await appendFile(process.env.GITHUB_OUTPUT, `source_commit=${sourceCommit}\n`, 'utf8');
 }
