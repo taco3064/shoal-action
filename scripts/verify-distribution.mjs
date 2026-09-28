@@ -121,6 +121,7 @@ function assertProvenance(value) {
     !value
     || value.formatVersion !== 1
     || value.sourceRepository !== 'taco3064/shoal-app'
+    || !/^[0-9a-f]{40}$/u.test(value.sourceCommit)
     || !/^[0-9a-f]{40}$/u.test(value.sourceCandidateTree)
     || value.packageCommand !== 'npm run package:action'
     || !/^[0-9a-f]{64}$/u.test(value.packageManifestSha256)
