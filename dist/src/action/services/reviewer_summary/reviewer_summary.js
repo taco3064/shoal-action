@@ -1,6 +1,7 @@
 import { parseProtocolComment, parseRequestPayload, } from '~app/protocol/services/review_protocol';
 import { createReviewerSummary, } from '~app/protocol/services/reviewer_summary_schema';
 import { countInvalidFormalResults, getCurrentAdmittedRequest, getInvalidFormalResultIncrement, isJudgmentLifecycleValid, isPriorInitialReviewEvidence, } from './review_lifecycle';
+import { isValidRequesterNode } from './requester_membership';
 export async function computeReviewerSummary(input) {
     const currentPolicyCommit = await input.resolvers.resolveCurrentReviewPolicyCommit();
     const validRequests = await collectValidRequests(input);
@@ -224,11 +225,4 @@ function upsertCanonicalThread(byTargetId, thread) {
 }
 function hasCurrentRequest(thread) {
     return Boolean(thread.currentRequest);
-}
-function isValidRequesterNode(requesterNode, author, networkRootRepositoryId) {
-    return Boolean(requesterNode
-        && requesterNode.isFork
-        && requesterNode.owner.type === 'User'
-        && requesterNode.owner.id === author.id
-        && requesterNode.parentRepositoryId === networkRootRepositoryId);
 }

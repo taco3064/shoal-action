@@ -28,13 +28,13 @@
     },
     {
       "path": "src/action/services/github_client/github_api_response.js",
-      "sha256": "e48120aebbfb0bcbe4e70f99043e8338946d5ed9a370b316423edcbecb413b87",
-      "size": 3984
+      "sha256": "b67800b91939aaa0b922e9b7f8a0385a22b106c06f79b9ddafb5d6de5f66790e",
+      "size": 3701
     },
     {
       "path": "src/action/services/github_client/github_client.js",
-      "sha256": "54e65734b89da03f54ed25f3d1fc2314566402bad2246923d0c624a71dd8d60d",
-      "size": 10173
+      "sha256": "4dcdbd8e958afa4ee74a425b5ca2e56e2d4e63aa77fa27f1c86960dd9536fcd5",
+      "size": 10360
     },
     {
       "path": "src/action/services/github_client/index.js",
@@ -48,8 +48,13 @@
     },
     {
       "path": "src/action/services/reviewer_summary/index.js",
-      "sha256": "dc83b72e8dcfd4bdc463fe596db8584e7d9ef0a91e7145d636073aa5330bb852",
-      "size": 61
+      "sha256": "e2a295cdcddda50ee1b79c1fa38fa9df12535636b840d651b576dc94b47158ac",
+      "size": 124
+    },
+    {
+      "path": "src/action/services/reviewer_summary/requester_membership.js",
+      "sha256": "7628c3fe4b83b1abb4c4ac52c2fc877ee2a472aff3cd064c9907132fae4207e4",
+      "size": 395
     },
     {
       "path": "src/action/services/reviewer_summary/review_lifecycle.js",
@@ -58,8 +63,8 @@
     },
     {
       "path": "src/action/services/reviewer_summary/reviewer_summary.js",
-      "sha256": "5a6e860b03239b4b9b10d6ccd7ab878d3aa30f948cd8c161827da8aeacdf87b3",
-      "size": 10480
+      "sha256": "5e67b28bf5119786868ed7ef5b90a4524672032a3e1a2dd95c6356f400c4bae4",
+      "size": 10227
     },
     {
       "path": "src/action/services/reviewer_summary/types.js",
@@ -70,6 +75,11 @@
       "path": "src/action/types.js",
       "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
       "size": 11
+    },
+    {
+      "path": "src/protocol/services/network_compatibility/index.js",
+      "sha256": "551f3dc46dc1169554851c402967b5750e2942269b0131fa0c4bc2c068cbb015",
+      "size": 2331
     },
     {
       "path": "src/protocol/services/review_protocol/contract.js",
@@ -113,8 +123,8 @@
     },
     {
       "path": "src/protocol/services/reviewer_summary_schema/reviewer_summary_schema.js",
-      "sha256": "cd7c34fc96f6903a5bba9383b0f98af06ba13d024f3190cb8149373296ccc9f0",
-      "size": 3955
+      "sha256": "f5e8e8b83babc29a76cdc4b07921e4d91bc4547af1bf563b5674344ba9d359ba",
+      "size": 4664
     },
     {
       "path": "src/protocol/services/reviewer_summary_schema/types.js",

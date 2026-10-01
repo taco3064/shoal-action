@@ -1,24 +1,35 @@
-import { getProtocolVersion } from '../review_protocol';
-export const summarySchemaVersion = 1;
+import { currentReviewerSummaryContract, isSupportedReviewerSummaryContract, } from '../network_compatibility';
+export const summarySchemaVersion = currentReviewerSummaryContract.summarySchemaVersion;
 export function createReviewerSummary(repositoryId, metrics) {
     return {
         metrics: assertPrimitiveMetrics(metrics),
-        protocolVersion: getProtocolVersion(),
+        protocolVersion: currentReviewerSummaryContract.protocolVersion,
         reviewerNode: {
             repositoryId: assertPositiveInteger(repositoryId, 'reviewerNode.repositoryId'),
         },
         summarySchemaVersion,
     };
 }
-export function validateReviewerSummary(value) {
+export function validateReviewerSummary(value, expectedContract = currentReviewerSummaryContract) {
     if (!isRecord(value)) {
         throw new Error('Reviewer Summary must be a JSON object.');
     }
-    if (value.protocolVersion !== getProtocolVersion()) {
+    if (typeof value.protocolVersion !== 'number') {
         throw new Error('Reviewer Summary protocolVersion is unsupported.');
     }
-    if (value.summarySchemaVersion !== summarySchemaVersion) {
+    if (typeof value.summarySchemaVersion !== 'number') {
         throw new Error('Reviewer Summary summarySchemaVersion is unsupported.');
+    }
+    const candidateContract = {
+        protocolVersion: value.protocolVersion,
+        summarySchemaVersion: value.summarySchemaVersion,
+    };
+    if (!isSupportedReviewerSummaryContract(candidateContract)) {
+        throw new Error('Reviewer Summary protocolVersion is unsupported.');
+    }
+    if (value.protocolVersion !== expectedContract.protocolVersion
+        || value.summarySchemaVersion !== expectedContract.summarySchemaVersion) {
+        throw new Error('Reviewer Summary contract does not match trusted workflow.');
     }
     if (!isRecord(value.reviewerNode)) {
         throw new Error('Reviewer Summary reviewerNode must be an object.');

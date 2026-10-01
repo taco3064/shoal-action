@@ -1,5 +1,6 @@
+import { isValidRequesterNode } from '../reviewer_summary';
 import { reviewProtocol } from '~app/protocol/services/review_protocol';
-import { isCommentResponse, isCommitResponse, isDirectFork, isIssueListResponse, isIssueResponse, isRecord, isRepositoryResponse, isWorkflowRunResponse, parseNextLink, toComment, toRequesterNode, toUser, } from './github_api_response';
+import { isCommentResponse, isCommitResponse, isIssueListResponse, isIssueResponse, isRecord, isRepositoryResponse, isWorkflowRunResponse, parseNextLink, toComment, toRequesterNode, toUser, } from './github_api_response';
 export class GitHubReadError extends Error {
     constructor(message) {
         super(message);
@@ -85,17 +86,19 @@ export class GitHubClient {
     }
     async resolveRequesterNode(author, networkRootRepositoryId, networkRootRepositoryName) {
         const directNameCandidate = await this.getRepositoryOrNull(`${author.login}/${networkRootRepositoryName}`);
-        if (isDirectFork(directNameCandidate, author.id, networkRootRepositoryId)) {
-            return toRequesterNode(directNameCandidate);
+        const directNode = directNameCandidate && toRequesterNode(directNameCandidate);
+        if (isValidRequesterNode(directNode, author, networkRootRepositoryId)) {
+            return directNode;
         }
         const repositories = await this.paginate(`/users/${author.login}/repos?type=owner&per_page=100`, isRepositoryResponse);
         for (const item of repositories) {
-            if (!item.fork) {
+            if (!item.fork && item.id !== networkRootRepositoryId) {
                 continue;
             }
             const repository = await this.getRepositoryOrNull(item.full_name);
-            if (isDirectFork(repository, author.id, networkRootRepositoryId)) {
-                return toRequesterNode(repository);
+            const node = repository && toRequesterNode(repository);
+            if (isValidRequesterNode(node, author, networkRootRepositoryId)) {
+                return node;
             }
         }
         return null;

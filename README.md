@@ -39,6 +39,7 @@ Local distribution checks:
 ```bash
 npm run verify
 npm run smoke
+npm run test:runtime
 npm run negative
 ```
 
@@ -58,7 +59,9 @@ PR and tag jobs call the same `.github/actions/verify` composite on Ubuntu and W
 node scripts/verify-candidate.mjs /path/to/exact-source /tmp/distribution-evidence.json
 ```
 
-The distribution checkout must be clean. The source checkout must match both recorded identities and be clean before reproduction. The command packages only inside that isolated source checkout, compares the complete 25-file package, executes runtime smoke and negative controls, and verifies that the distribution checkout did not change. This repository has no dependencies to install.
+The distribution checkout must be clean. The source checkout must match both recorded identities and be clean before reproduction. The command packages only inside that isolated source checkout, compares the complete generated package (including its manifest), executes runtime smoke, packaged-runtime regressions and negative controls, and verifies that the distribution checkout did not change. This repository has no dependencies to install.
+
+The packaged-runtime regressions start `dist/main.mjs` with controlled read-only API fixtures and a temporary output workspace. They prove equivalent Root-owner/direct-fork accounting, reject invalid Membership, and preserve Initial/Manual Review, Re-review, invalid formal result, self-review, Target/Policy freshness, Star-state and Protocol/schema behavior. Both OS candidate jobs invoke these checks. The committed provenance now records the accepted source-stage candidate from `shoal-app#28` / PR #29. This distribution supplies an immutable Action commit for `shoal-station#11`; the production repair still requires that canonical workflow pin and the final `shoal-app#28` trust convergence.
 
 The resulting supplementary evidence binds the exact distribution commit/tree to `source-package.json`, the verified source identity and manifest digest. It is generated outside the candidate to avoid a self-referential commit hash. `source-package.json` remains the committed source-provenance authority; release text is only a mirror. CI evidence is not a second Shoal compatibility or trust authority.
 

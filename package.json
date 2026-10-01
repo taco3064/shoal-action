@@ -10,6 +10,7 @@
   "scripts": {
     "verify": "node scripts/verify-distribution.mjs",
     "smoke": "node scripts/smoke.mjs",
+    "test:runtime": "node scripts/runtime-regression.mjs",
     "negative": "node scripts/negative-controls.mjs",
     "verify:source": "node scripts/verify-distribution.mjs --source-package"
   }

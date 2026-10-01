@@ -31,6 +31,7 @@ try {
   if (packaged.status !== 0) throw new Error('Exact-source reproduction failed.');
   await verifySourcePackage(resolve(source, 'dist/action-package'));
   run('smoke.mjs');
+  run('runtime-regression.mjs');
   run('negative-controls.mjs');
   run('release-state.test.mjs');
   if (git(['status', '--porcelain', '--untracked-files=all']) || git(['rev-parse', 'HEAD']) !== commit) {

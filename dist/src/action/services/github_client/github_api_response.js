@@ -24,7 +24,7 @@ export function toRequesterNode(repository) {
         id: repository.id,
         isFork: repository.fork,
         owner: toUser(repository.owner),
-        parentRepositoryId: repository.parent?.id ?? 0,
+        parentRepositoryId: repository.parent?.id ?? null,
     };
 }
 export function toUser(user) {
@@ -33,13 +33,6 @@ export function toUser(user) {
         login: user.login,
         type: user.type,
     };
-}
-export function isDirectFork(repository, ownerId, networkRootRepositoryId) {
-    return Boolean(repository
-        && repository.fork
-        && repository.owner.type === 'User'
-        && repository.owner.id === ownerId
-        && repository.parent?.id === networkRootRepositoryId);
 }
 export function isIssueResponse(value) {
     return (isIssueListResponse(value)
