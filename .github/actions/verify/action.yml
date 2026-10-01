@@ -1,0 +1,37 @@
+name: Verify exact distribution candidate
+description: Reproduce the pinned source in isolation and verify the complete candidate without mutation.
+runs:
+  using: composite
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+      with:
+        node-version-file: '.nvmrc'
+    - name: Resolve exact source commit from provenance
+      id: source
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: node scripts/resolve-source-commit.mjs
+    - name: Checkout isolated exact source
+      shell: bash
+      env:
+        SOURCE_COMMIT: ${{ steps.source.outputs.source_commit }}
+        SOURCE_PATH: ${{ runner.temp }}/shoal-action-source
+      run: |
+        git init "$SOURCE_PATH"
+        git -C "$SOURCE_PATH" remote add origin https://github.com/taco3064/shoal-app.git
+        git -C "$SOURCE_PATH" fetch --depth=1 origin "$SOURCE_COMMIT"
+        git -C "$SOURCE_PATH" checkout --detach FETCH_HEAD
+        node scripts/verify-source-checkout.mjs "$SOURCE_PATH"
+    - name: Install locked source dependencies
+      shell: bash
+      working-directory: ${{ runner.temp }}/shoal-action-source
+      run: npm ci
+    - name: Verify exact candidate, reproduction, smoke and negative controls
+      shell: bash
+      env:
+        EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        SOURCE_PATH: ${{ runner.temp }}/shoal-action-source
+        EVIDENCE_PATH: ${{ runner.temp }}/distribution-evidence.json
+      run: node scripts/verify-candidate.mjs "$SOURCE_PATH" "$EVIDENCE_PATH"

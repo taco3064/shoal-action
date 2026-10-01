@@ -36,7 +36,7 @@ export async function verifyDistribution(options = {}) {
     .map((path) => normalize(relative(distributionRoot, path)))
     .filter((path) => path !== 'package-manifest.json')
     .sort();
-  const declaredFiles = manifest.files.map((entry) => entry.path).sort();
+  const declaredFiles = manifest.files.map((entry) => entry?.path).sort();
 
   if (JSON.stringify(actualFiles) !== JSON.stringify(declaredFiles)) {
     throw new Error('Distribution file set does not exactly match the package manifest.');
@@ -46,7 +46,9 @@ export async function verifyDistribution(options = {}) {
     if (
       !entry
       || typeof entry.path !== 'string'
-      || typeof entry.sha256 !== 'string'
+      || !/^[a-zA-Z0-9_.-]+(?:\/[a-zA-Z0-9_.-]+)*$/u.test(entry.path)
+      || entry.path.split('/').some((part) => part === '.' || part === '..')
+      || !/^[0-9a-f]{64}$/u.test(entry.sha256)
       || !Number.isSafeInteger(entry.size)
       || entry.size < 0
     ) {
@@ -108,15 +110,22 @@ function assertMetadata(metadata, root) {
   if (metadataFiles.length !== 1) {
     throw new Error(`Expected exactly one root Action metadata file, found ${metadataFiles.length}.`);
   }
-  if (!/^runs:\s*$/mu.test(metadata) || !/^\s+using:\s*node24\s*$/mu.test(metadata)) {
-    throw new Error('Action metadata must declare the Node 24 JavaScript runtime.');
+  // Accept the deliberately small supported metadata shape, without matching
+  // decoy using/main fields outside runs or ambiguous duplicate YAML keys.
+  const lines = metadata.split(/\r?\n/u);
+  const starts = lines.flatMap((line, index) => /^runs:/u.test(line) ? [index] : []);
+  if (starts.length !== 1 || lines[starts[0]] !== 'runs:') {
+    throw new Error('Action metadata must contain exactly one plain runs mapping.');
   }
-  if (!/^\s+main:\s*dist\/main\.mjs\s*$/mu.test(metadata)) {
-    throw new Error('Action metadata must point runs.main to dist/main.mjs.');
+  const start = starts[0] + 1;
+  const end = lines.findIndex((line, index) => index >= start && /^[^\s#]/u.test(line));
+  const block = lines.slice(start, end === -1 ? undefined : end).filter((line) => line.trim());
+  if (block.length !== 2 || block[0] !== '  using: node24' || block[1] !== '  main: dist/main.mjs') {
+    throw new Error('Action runs must use node24 and exactly dist/main.mjs, without alternate entry points.');
   }
 }
 
-function assertProvenance(value) {
+export function assertProvenance(value) {
   if (
     !value
     || value.formatVersion !== 1
@@ -139,6 +148,8 @@ async function listFiles(root) {
       results.push(...await listFiles(path));
     } else if (entry.isFile()) {
       results.push(path);
+    } else {
+      throw new Error(`Unsupported payload filesystem entry: ${path}.`);
     }
   }
   return results.sort();

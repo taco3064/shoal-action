@@ -10,45 +10,21 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
-      - name: Checkout tagged distribution
+      - name: Checkout exact tag target
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - name: Verify exact tag candidate
-        shell: bash
-        env:
-          EXPECTED_SHA: ${{ github.sha }}
-        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
-      - name: Setup Node
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+      - uses: ./.github/actions/verify
+      - name: Preserve supplementary exact-candidate evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          node-version-file: '.nvmrc'
-      - run: npm run verify
-      - run: npm run smoke
-      - run: npm run negative
-      - name: Resolve exact source commit from tracked provenance
-        id: source
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: node scripts/resolve-source-commit.mjs
-      - name: Checkout exact shoal-app source commit
-        shell: bash
-        env:
-          SOURCE_COMMIT: ${{ steps.source.outputs.source_commit }}
-        run: |
-          git init .source/shoal-app
-          git -C .source/shoal-app remote add origin https://github.com/taco3064/shoal-app.git
-          git -C .source/shoal-app fetch --depth=1 origin "$SOURCE_COMMIT"
-          git -C .source/shoal-app checkout --detach FETCH_HEAD
-      - name: Verify source checkout tree
-        run: node scripts/verify-source-checkout.mjs .source/shoal-app
-      - name: Reproduce source package
-        working-directory: .source/shoal-app
-        run: |
-          npm ci
-          npm run package:action
-      - name: Verify byte-identical source correspondence
-        run: node scripts/verify-distribution.mjs --source-package .source/shoal-app/dist/action-package
+          name: distribution-evidence-${{ matrix.os }}
+          path: ${{ runner.temp }}/distribution-evidence.json
+          if-no-files-found: error
