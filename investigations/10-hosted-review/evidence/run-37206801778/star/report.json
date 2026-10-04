@@ -1,0 +1,14 @@
+{
+  "identity": {
+    "GITHUB_REPOSITORY": "taco3064/shoal-station",
+    "GITHUB_SHA": "fb1294d92530997841a5506ed8fa134387a74ea8",
+    "GITHUB_RUN_ID": "37206801778",
+    "GITHUB_RUN_ATTEMPT": "1"
+  },
+  "tokenType": "",
+  "declaredUserPermission": "Starring:read/write",
+  "target": "taco3064/shoal-action",
+  "evidenceType": "LIVE",
+  "result": "UNKNOWN",
+  "observation": "Owner credential unavailable. No Star request or mutation attempted. This is not a token rejection."
+}

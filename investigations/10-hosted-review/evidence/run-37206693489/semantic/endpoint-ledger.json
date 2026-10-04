@@ -1,0 +1,262 @@
+[
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4947"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/branches/main",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4946"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/contents/README.md?ref=743e53c09ceb0034fee055312e1866dd9f1e8d56",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4945"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4944"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/branches/main",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4943"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/contents/README.md?ref=4d9ee5fa941fd5ded3011d8c4642c5bf2fff94f1",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4942"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/contents/.github/workflows/ci.yml?ref=4d9ee5fa941fd5ded3011d8c4642c5bf2fff94f1",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4941"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/contents/.github/workflows/release.yml?ref=4d9ee5fa941fd5ded3011d8c4642c5bf2fff94f1",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4940"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/contents/internal/cli/recovery_test.go?ref=4d9ee5fa941fd5ded3011d8c4642c5bf2fff94f1",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4939"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/contents/internal/cli/automated.go?ref=4d9ee5fa941fd5ded3011d8c4642c5bf2fff94f1",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4938"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/issues/3",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "issues=read",
+    "rateRemaining": "4937"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/issues/3/comments?per_page=100",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "issues=read; pull_requests=read",
+    "rateRemaining": "4936"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/issues/11",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "issues=read",
+    "rateRemaining": "4935"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/issues/11/comments?per_page=100",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "issues=read; pull_requests=read",
+    "rateRemaining": "4934"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/issues/17",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "issues=read",
+    "rateRemaining": "4933"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/issues/17/comments?per_page=100",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "issues=read; pull_requests=read",
+    "rateRemaining": "4932"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/actions/runs?head_sha=4d9ee5fa941fd5ded3011d8c4642c5bf2fff94f1&per_page=10",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "actions=read",
+    "rateRemaining": "4931"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/gh-shoal/releases/tags/v0.6.0",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4930"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/octocat/Hello-World",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4929"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/octocat/Hello-World/branches/master",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4928"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repositories/1296269",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4927"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco-gem/shoal-station",
+    "method": "GET",
+    "status": 404,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4926"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/appcraft-mono",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4925"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/appcraft-mono/branches/main",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4924"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repositories/613750570",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4923"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-action-10-deliberately-absent-20261004",
+    "method": "GET",
+    "status": 404,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,copilot-requests:write",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4922"
+  }
+]

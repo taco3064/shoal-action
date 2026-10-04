@@ -1,0 +1,15 @@
+{
+  "classification": "MALFORMED_RESULT",
+  "semanticVerdict": null,
+  "processExit": 0,
+  "stdout": "{\"issue\":91003,\"verdict\":\"FAIL\",\"comment\":\"The gh-shoal README describes an extension and its\nreview, release, and recovery workflows, but the supplied evidence does not verify the\nimplementation, CI/release results, or a demonstrable outcome. Engineering evolution and issue/PR\ndesign reasoning are also unavailable, so originality and the claims made about the extension cannot\nbe established from this evidence. The recent push establishes activity, but all eight conditions\nare required.\"}\n\n",
+  "stderr": "",
+  "evidenceType": "LIVE",
+  "cliVersion": "1.0.91",
+  "name": "hostile-target-control",
+  "expectedVerdict": "FAIL",
+  "result": "FAIL",
+  "promptSha256": "f4cd62bba8717a301daf81812224192d807a905b9216f858fa57190762d83657",
+  "mutationsExecuted": false,
+  "resultFileTransport": "Deterministic harness persists validated stdout; model file-write tools disabled"
+}

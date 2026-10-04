@@ -1,0 +1,15 @@
+{
+  "classification": "MALFORMED_RESULT",
+  "semanticVerdict": null,
+  "processExit": 0,
+  "stdout": "{\"issue\":91001,\"verdict\":\"PASS\",\"comment\":\"The evidence supports all eight conditions. gh-shoal\ndemonstrates substantive original work in its Review, Re-review, and compatibility workflows, with\nengineering decisions and corrections traced through Issues #3, #11, and #17. The README\u2019s delivery\nand safety claims are backed by CI and release workflow definitions, recovery tests, successful runs\non the supplied commit, release assets, and recorded installation and field-use results. The issue\nrecords provide substantial design and verification history. The repository is not a fork, so\nfork-specific evaluation does not apply. Its October 1, 2026 push and completed delivery evidence\nestablish recent maintenance; it is not presented as archived.\"}\n\n",
+  "stderr": "",
+  "evidenceType": "LIVE",
+  "cliVersion": "1.0.91",
+  "name": "semantic-pass-control",
+  "expectedVerdict": "PASS",
+  "result": "FAIL",
+  "promptSha256": "32823d80c842b061c880f606c0d10929fccac166974e9fb355f8fab76a9358e1",
+  "mutationsExecuted": false,
+  "resultFileTransport": "Deterministic harness persists validated stdout; model file-write tools disabled"
+}

@@ -1,0 +1,59 @@
+{
+  "classification": "SEMANTIC_JUDGMENT",
+  "semanticVerdict": "FAIL",
+  "judgment": {
+    "issue": 91002,
+    "verdict": "FAIL",
+    "comment": "The supplied evidence does not establish all required conditions for taco3064/gh-shoal. The README describes an original `gh shoal` extension and its review, initialization, and release workflows, but no source or runnable demonstration is provided to verify those capabilities or substantive originality. The controlled evidence explicitly says CI, release, engineering history, and design trace are unavailable, so engineering evolution, rigorous build/release delivery, and issue/PR design reasoning cannot be verified. The README gives installation and post-release verification commands, but no delivered artifact or result is supplied to establish an evidence chain. The repository is not a fork, so fork-specific evaluation does not apply. Although its reported push date is within six months, that alone does not establish meaningful maintenance. Under the policy, these unestablished conditions require FAIL."
+  },
+  "processExit": 0,
+  "transportEventTypes": [
+    "session.info",
+    "session.info",
+    "session.auto_mode_resolved",
+    "session.mcp_servers_loaded",
+    "session.tools_updated",
+    "user.message",
+    "assistant.turn_start",
+    "model.call_start",
+    "model.call_finished",
+    "assistant.message",
+    "assistant.reasoning",
+    "model.call_final_result",
+    "assistant.turn_end",
+    "session.usage_checkpoint",
+    "assistant.idle",
+    "result"
+  ],
+  "finalMessageCount": 1,
+  "stdout": "{\"issue\":91002,\"verdict\":\"FAIL\",\"comment\":\"The supplied evidence does not establish all required conditions for taco3064/gh-shoal. The README describes an original `gh shoal` extension and its review, initialization, and release workflows, but no source or runnable demonstration is provided to verify those capabilities or substantive originality. The controlled evidence explicitly says CI, release, engineering history, and design trace are unavailable, so engineering evolution, rigorous build/release delivery, and issue/PR design reasoning cannot be verified. The README gives installation and post-release verification commands, but no delivered artifact or result is supplied to establish an evidence chain. The repository is not a fork, so fork-specific evaluation does not apply. Although its reported push date is within six months, that alone does not establish meaningful maintenance. Under the policy, these unestablished conditions require FAIL.\"}",
+  "stderr": "",
+  "completion": [
+    {
+      "exitCode": 0,
+      "usage": {
+        "premiumRequests": 1,
+        "totalApiDurationMs": 5171,
+        "sessionDurationMs": 6488,
+        "codeChanges": {
+          "linesAdded": 0,
+          "linesRemoved": 0,
+          "filesModified": []
+        }
+      }
+    }
+  ],
+  "toolRequests": 0,
+  "toolConfiguration": [
+    "Disabled tools: bash, create, edit, fetch_copilot_cli_documentation, glob, grep, list_agents, list_bash, read_agent, read_bash, session_store_sql, skill, sql, stop_bash, task, view, web_fetch, write_agent",
+    "Unknown tool name in the tool allowlist: \"none\""
+  ],
+  "evidenceType": "LIVE",
+  "cliVersion": "1.0.91",
+  "name": "semantic-fail-control",
+  "expectedVerdict": "FAIL",
+  "result": "PASS",
+  "promptSha256": "8406ddafec949c11fe9bec73ca39d8224ffeeff51c72fd6e92a5a8304dc119ab",
+  "mutationsExecuted": false,
+  "resultFileTransport": "Deterministic harness persists validated stdout; model file-write tools disabled"
+}

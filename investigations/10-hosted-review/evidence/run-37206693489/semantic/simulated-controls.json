@@ -1,0 +1,83 @@
+[
+  {
+    "name": "malformed",
+    "evidenceType": "SIMULATED",
+    "observed": {
+      "classification": "MALFORMED_RESULT",
+      "semanticVerdict": null
+    },
+    "result": "PASS"
+  },
+  {
+    "name": "missing",
+    "evidenceType": "SIMULATED",
+    "observed": {
+      "classification": "MISSING_RESULT",
+      "semanticVerdict": null
+    },
+    "result": "PASS"
+  },
+  {
+    "name": "process-failure-with-plausible-result",
+    "evidenceType": "SIMULATED",
+    "observed": {
+      "classification": "PROCESS_FAILURE",
+      "semanticVerdict": null
+    },
+    "result": "PASS"
+  },
+  {
+    "name": "wrong-issue",
+    "evidenceType": "SIMULATED",
+    "observed": {
+      "classification": "MALFORMED_RESULT",
+      "semanticVerdict": null
+    },
+    "result": "PASS"
+  },
+  {
+    "name": "extra-mutation-key",
+    "evidenceType": "SIMULATED",
+    "observed": {
+      "classification": "MALFORMED_RESULT",
+      "semanticVerdict": null
+    },
+    "result": "PASS"
+  },
+  {
+    "name": "timeout",
+    "evidenceType": "SIMULATED",
+    "observed": {
+      "classification": "TIMEOUT",
+      "semanticVerdict": null
+    },
+    "result": "PASS"
+  },
+  {
+    "name": "interrupted",
+    "evidenceType": "SIMULATED",
+    "observed": {
+      "classification": "PROCESS_FAILURE",
+      "semanticVerdict": null
+    },
+    "result": "PASS"
+  },
+  {
+    "name": "api-500",
+    "evidenceType": "SIMULATED",
+    "classification": "API_UNAVAILABLE",
+    "result": "PASS"
+  },
+  {
+    "name": "api-403",
+    "evidenceType": "SIMULATED",
+    "classification": "RATE_LIMIT",
+    "result": "PASS"
+  },
+  {
+    "name": "api-429",
+    "evidenceType": "SIMULATED",
+    "classification": "RATE_LIMIT",
+    "result": "PASS"
+  }
+]

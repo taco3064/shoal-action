@@ -1,0 +1,102 @@
+[
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/octocat/Hello-World",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4986"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/octocat/Hello-World/branches/master",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4985"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repositories/1296269",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4984"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco-gem/gem-station",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4983"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco-gem/gem-station/branches/main",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4921"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repositories/1404227857",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4920"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/appcraft-mono",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4919"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/appcraft-mono/branches/main",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read",
+    "acceptedPermissions": "contents=read",
+    "rateRemaining": "4918"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repositories/613750570",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4917"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-action-10-deliberately-absent-20261004",
+    "method": "GET",
+    "status": 404,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4916"
+  }
+]

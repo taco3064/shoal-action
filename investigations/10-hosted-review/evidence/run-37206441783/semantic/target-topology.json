@@ -1,0 +1,40 @@
+[
+  {
+    "evidenceType": "LIVE",
+    "locator": "octocat/Hello-World",
+    "classification": "READ_OK",
+    "status": 200,
+    "id": 1296269,
+    "resolvedName": "octocat/Hello-World",
+    "defaultBranch": "master",
+    "fork": false,
+    "archived": false,
+    "head": "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+    "stableIDReadback": true
+  },
+  {
+    "evidenceType": "LIVE",
+    "locator": "taco-gem/shoal-station",
+    "classification": "MISSING_OR_INACCESSIBLE",
+    "status": 404
+  },
+  {
+    "evidenceType": "LIVE",
+    "locator": "taco3064/appcraft-mono",
+    "classification": "READ_OK",
+    "status": 200,
+    "id": 613750570,
+    "resolvedName": "taco3064/appcraft-mono",
+    "defaultBranch": "main",
+    "fork": false,
+    "archived": true,
+    "head": "51176ee10c4168c44c228d2f6fcac5822b4d8531",
+    "stableIDReadback": true
+  },
+  {
+    "evidenceType": "LIVE",
+    "locator": "taco3064/shoal-action-10-deliberately-absent-20261004",
+    "classification": "MISSING_OR_INACCESSIBLE",
+    "status": 404
+  }
+]

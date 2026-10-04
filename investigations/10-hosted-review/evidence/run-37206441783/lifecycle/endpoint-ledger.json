@@ -1,0 +1,132 @@
+[
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,actions:read,issues:write",
+    "acceptedPermissions": "metadata=read",
+    "rateRemaining": "4999"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/actions/workflows?per_page=100",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,actions:read,issues:write",
+    "acceptedPermissions": "actions=read",
+    "rateRemaining": "4998"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/issues",
+    "method": "POST",
+    "status": 201,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,actions:read,issues:write",
+    "acceptedPermissions": "issues=write",
+    "rateRemaining": "4997"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/issues/15",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,actions:read,issues:write",
+    "acceptedPermissions": "issues=read",
+    "rateRemaining": "4996"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/issues/15/comments?per_page=100",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,actions:read,issues:write",
+    "acceptedPermissions": "issues=read; pull_requests=read",
+    "rateRemaining": "4995"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/issues/15/comments",
+    "method": "POST",
+    "status": 201,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,actions:read,issues:write",
+    "acceptedPermissions": "issues=write; pull_requests=write",
+    "rateRemaining": "4994"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/issues/comments/5980600560",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,actions:read,issues:write",
+    "acceptedPermissions": "issues=read; pull_requests=read",
+    "rateRemaining": "4993"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/issues/15",
+    "method": "PATCH",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,actions:read,issues:write",
+    "acceptedPermissions": "issues=write; pull_requests=write",
+    "rateRemaining": "4992"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/issues/15",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,actions:read,issues:write",
+    "acceptedPermissions": "issues=read",
+    "rateRemaining": "4991"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/issues/15",
+    "method": "PATCH",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,actions:read,issues:write",
+    "acceptedPermissions": "issues=write; pull_requests=write",
+    "rateRemaining": "4990"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/issues/15",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,actions:read,issues:write",
+    "acceptedPermissions": "issues=read",
+    "rateRemaining": "4989"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/issues/15",
+    "method": "PATCH",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,actions:read,issues:write",
+    "acceptedPermissions": "issues=write; pull_requests=write",
+    "rateRemaining": "4988"
+  },
+  {
+    "evidenceType": "LIVE",
+    "endpoint": "/repos/taco3064/shoal-station/issues/15",
+    "method": "GET",
+    "status": 200,
+    "tokenType": "workflow GITHUB_TOKEN",
+    "permissions": "contents:read,actions:read,issues:write",
+    "acceptedPermissions": "issues=read",
+    "rateRemaining": "4987"
+  }
+]

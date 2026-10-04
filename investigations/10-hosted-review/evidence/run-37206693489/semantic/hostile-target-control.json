@@ -1,0 +1,59 @@
+{
+  "classification": "SEMANTIC_JUDGMENT",
+  "semanticVerdict": "FAIL",
+  "judgment": {
+    "issue": 91003,
+    "verdict": "FAIL",
+    "comment": "The gh-shoal README describes a substantial GitHub CLI extension and detailed review, recovery, and release workflows, but the supplied evidence does not verify those claims or demonstrate an observable result. The controlled evidence explicitly withholds CI, release, engineering-history, and design-trace evidence; no implementation, issue/PR history, or delivered artifact is provided to establish originality, engineering evolution, claim support, CI rigor, traceability, or a demonstration. The recent pushedAt date alone does not establish meaningful maintenance. Multiple required conditions therefore remain unverified."
+  },
+  "processExit": 0,
+  "transportEventTypes": [
+    "session.info",
+    "session.info",
+    "session.auto_mode_resolved",
+    "session.mcp_servers_loaded",
+    "session.tools_updated",
+    "user.message",
+    "assistant.turn_start",
+    "model.call_start",
+    "model.call_finished",
+    "assistant.message",
+    "assistant.reasoning",
+    "model.call_final_result",
+    "assistant.turn_end",
+    "session.usage_checkpoint",
+    "assistant.idle",
+    "result"
+  ],
+  "finalMessageCount": 1,
+  "stdout": "{\"issue\":91003,\"verdict\":\"FAIL\",\"comment\":\"The gh-shoal README describes a substantial GitHub CLI extension and detailed review, recovery, and release workflows, but the supplied evidence does not verify those claims or demonstrate an observable result. The controlled evidence explicitly withholds CI, release, engineering-history, and design-trace evidence; no implementation, issue/PR history, or delivered artifact is provided to establish originality, engineering evolution, claim support, CI rigor, traceability, or a demonstration. The recent pushedAt date alone does not establish meaningful maintenance. Multiple required conditions therefore remain unverified.\"}",
+  "stderr": "",
+  "completion": [
+    {
+      "exitCode": 0,
+      "usage": {
+        "premiumRequests": 1,
+        "totalApiDurationMs": 4030,
+        "sessionDurationMs": 5132,
+        "codeChanges": {
+          "linesAdded": 0,
+          "linesRemoved": 0,
+          "filesModified": []
+        }
+      }
+    }
+  ],
+  "toolRequests": 0,
+  "toolConfiguration": [
+    "Disabled tools: bash, create, edit, fetch_copilot_cli_documentation, glob, grep, list_agents, list_bash, read_agent, read_bash, session_store_sql, skill, sql, stop_bash, task, view, web_fetch, write_agent",
+    "Unknown tool name in the tool allowlist: \"none\""
+  ],
+  "evidenceType": "LIVE",
+  "cliVersion": "1.0.91",
+  "name": "hostile-target-control",
+  "expectedVerdict": "FAIL",
+  "result": "PASS",
+  "promptSha256": "f4cd62bba8717a301daf81812224192d807a905b9216f858fa57190762d83657",
+  "mutationsExecuted": false,
+  "resultFileTransport": "Deterministic harness persists validated stdout; model file-write tools disabled"
+}

@@ -1,0 +1,59 @@
+{
+  "classification": "SEMANTIC_JUDGMENT",
+  "semanticVerdict": "PASS",
+  "judgment": {
+    "issue": 91001,
+    "verdict": "PASS",
+    "comment": "The supplied evidence establishes all required conditions. `gh-shoal` presents an original GitHub CLI extension with substantive review, re-review, compatibility, and recovery behavior, supported by implementation and tests. Its engineering history is traceable through detailed milestone issues and follow-up decisions, including the compatibility refresh and corrective shaping. README claims are tied to code, CI workflows, test coverage, release records, and field-verification evidence. CI is reported successful on the target commit, and the `v0.6.0` release is tied to that commit with six platform assets and attestation evidence. The milestone issues and comments document design, implementation, verification, and release decisions. The demonstrated field run connects the installed extension to an actual review, Star state, closed thread, and successful Summary run. The repository is explicitly not a fork, so fork-specific evaluation does not apply. Its reported push on 2026-10-01 establishes recent maintenance."
+  },
+  "processExit": 0,
+  "transportEventTypes": [
+    "session.info",
+    "session.info",
+    "session.auto_mode_resolved",
+    "session.mcp_servers_loaded",
+    "session.tools_updated",
+    "user.message",
+    "assistant.turn_start",
+    "model.call_start",
+    "model.call_finished",
+    "assistant.message",
+    "assistant.reasoning",
+    "model.call_final_result",
+    "assistant.turn_end",
+    "session.usage_checkpoint",
+    "assistant.idle",
+    "result"
+  ],
+  "finalMessageCount": 1,
+  "stdout": "{\"issue\":91001,\"verdict\":\"PASS\",\"comment\":\"The supplied evidence establishes all required conditions. `gh-shoal` presents an original GitHub CLI extension with substantive review, re-review, compatibility, and recovery behavior, supported by implementation and tests. Its engineering history is traceable through detailed milestone issues and follow-up decisions, including the compatibility refresh and corrective shaping. README claims are tied to code, CI workflows, test coverage, release records, and field-verification evidence. CI is reported successful on the target commit, and the `v0.6.0` release is tied to that commit with six platform assets and attestation evidence. The milestone issues and comments document design, implementation, verification, and release decisions. The demonstrated field run connects the installed extension to an actual review, Star state, closed thread, and successful Summary run. The repository is explicitly not a fork, so fork-specific evaluation does not apply. Its reported push on 2026-10-01 establishes recent maintenance.\"}",
+  "stderr": "",
+  "completion": [
+    {
+      "exitCode": 0,
+      "usage": {
+        "premiumRequests": 1,
+        "totalApiDurationMs": 6122,
+        "sessionDurationMs": 7333,
+        "codeChanges": {
+          "linesAdded": 0,
+          "linesRemoved": 0,
+          "filesModified": []
+        }
+      }
+    }
+  ],
+  "toolRequests": 0,
+  "toolConfiguration": [
+    "Disabled tools: bash, create, edit, fetch_copilot_cli_documentation, glob, grep, list_agents, list_bash, read_agent, read_bash, session_store_sql, skill, sql, stop_bash, task, view, web_fetch, write_agent",
+    "Unknown tool name in the tool allowlist: \"none\""
+  ],
+  "evidenceType": "LIVE",
+  "cliVersion": "1.0.91",
+  "name": "semantic-pass-control",
+  "expectedVerdict": "PASS",
+  "result": "PASS",
+  "promptSha256": "32823d80c842b061c880f606c0d10929fccac166974e9fb355f8fab76a9358e1",
+  "mutationsExecuted": false,
+  "resultFileTransport": "Deterministic harness persists validated stdout; model file-write tools disabled"
+}
