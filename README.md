@@ -40,6 +40,7 @@ Local distribution checks:
 npm run verify
 npm run smoke
 npm run test:runtime
+npm run test:compatibility
 npm run negative
 ```
 
@@ -59,24 +60,34 @@ PR and tag jobs call the same `.github/actions/verify` composite on Ubuntu and W
 node scripts/verify-candidate.mjs /path/to/exact-source /tmp/distribution-evidence.json
 ```
 
-The distribution checkout must be clean. The source checkout must match both recorded identities and be clean before reproduction. The command packages only inside that isolated source checkout, compares the complete generated package (including its manifest), executes runtime smoke, packaged-runtime regressions and negative controls, and verifies that the distribution checkout did not change. This repository has no dependencies to install.
+The distribution checkout must be clean for committed PR/main/tag verification. Before commit, stage the complete candidate and run the same verifier with `--staged`:
 
-The packaged-runtime regressions start `dist/main.mjs` with controlled read-only API fixtures and a temporary output workspace. They prove equivalent Root-owner/direct-fork accounting, reject invalid Membership, and preserve Initial/Manual Review, Re-review, invalid formal result, self-review, Target/Policy freshness, Star-state and Protocol/schema behavior. Both OS candidate jobs invoke these checks. The committed provenance now records the accepted source-stage candidate from `shoal-app#28` / PR #29. This distribution supplies an immutable Action commit for `shoal-station#11`; the production repair still requires that canonical workflow pin and the final `shoal-app#28` trust convergence.
+```bash
+node scripts/verify-candidate.mjs /path/to/exact-source /tmp/candidate-evidence.json --staged
+```
+
+That mode verifies the index tree, rejects omitted untracked or unstaged files, and checks that the index, tracked working content and base commit remain unchanged. Its supplementary evidence records the base commit and candidate tree; no future distribution commit is invented. The source checkout must match both recorded identities and be clean before reproduction. The command packages only inside that isolated source checkout, compares the complete generated package (including its manifest), executes runtime smoke, packaged-runtime regressions and negative controls, and verifies that the distribution checkout did not change. This repository has no dependencies to install.
+
+The packaged-runtime regressions start `dist/main.mjs` with controlled read-only API fixtures and a temporary output workspace. They prove equivalent Root-owner/direct-fork accounting, reject invalid Membership, and preserve Initial/Manual Review, Re-review, invalid formal result, self-review, Target/Policy freshness, Star-state and Protocol/schema behavior. Both OS candidate jobs invoke these checks. The workload fixtures additionally prove pending Initial Review, completed Initial PASS/FAIL, pending and completed Re-review epochs, terminal no-new-basis resolution, ordering, excluded Requests, and `P + C = R`. Supplemental probes of the distributed schema modules verify exact v1/v2 metric keys, trust-selected validation, invariant rejection, unchanged legacy workflow bindings, and absence of fabricated legacy P/C.
+
+The committed provenance records the accepted source candidate from `shoal-app#32` / PR #46: commit `38db6e8503a0d1c41bc95be97f2fb6fa6a1cf1c3`, tree `76d72f6696150a4b1d3cb193f7c3112559918cd6`. The package manifest SHA-256 is `2a2397fc86225acdf2cca7dd9bb1f84b317f3068a8f4665ac8d4dfc00a181f0d`. This distribution emits Protocol 1 / Summary Schema 2 with exactly the existing R/Q/S/I primitives plus `pendingReviewRequestCount` and `completedReviewRequestCount`. P/C are workload facts, not endorsement or ranking facts.
+
+After owner-authorized merge, the exact verified main commit must preserve the accepted candidate tree. That post-merge Action SHA is the handoff to `shoal-station#13`; `shoal-app#33` separately owns admission of the resulting canonical workflow generation.
 
 The resulting supplementary evidence binds the exact distribution commit/tree to `source-package.json`, the verified source identity and manifest digest. It is generated outside the candidate to avoid a self-referential commit hash. `source-package.json` remains the committed source-provenance authority; release text is only a mirror. CI evidence is not a second Shoal compatibility or trust authority.
 
-The existing `v0.1.0` payload and its original source remain unchanged and reproducible. The accepted Phase 2 compatibility authority is `shoal-app#23`, merged as `cc102c24646e2da7c95f74f2c11be979556bf67b`. The present runtime still emits the real Protocol 1 / Summary Schema 1 contract. Only `shoal-app` can admit a new Action SHA together with its exact workflow and allowed Summary contract. Publishing this repository does not admit that SHA.
+The existing `v0.1.0` payload and its original source remain unchanged and reproducible. The accepted Phase 2 compatibility authority is `shoal-app#23`, merged as `cc102c24646e2da7c95f74f2c11be979556bf67b`. Previously trusted workflow generations retain Protocol 1 / Summary Schema 1 without synthetic workload values; this source generation emits Protocol 1 / Summary Schema 2. Only `shoal-app` can admit a new Action SHA together with its exact workflow and allowed Summary contract. Publishing this repository does not admit that SHA.
 
 ## Release and Marketplace publication
 
 Only tag verification is automated; GitHub Release / Marketplace publication remains an owner action. No workflow creates a competing release. Component release versions do not imply Protocol/schema support.
 
-1. Start from the reviewed, exact-head CI-verified distribution commit. Checkout that commit with a clean worktree. Choose a new unused component version. Fetch tags, then create and push an annotated tag pointing to that exact commit:
+1. After owner-authorized merge, identify the exact post-merge main commit, verify that its tree equals the independently accepted candidate tree, and wait for its exact-SHA main verification to succeed. Start from that verified post-merge distribution commit. Checkout that commit with a clean worktree. Choose a new unused component version. Fetch tags, then create and push an annotated tag pointing to that exact commit:
 
    ```bash
    git fetch origin --tags
-   git switch --detach <REVIEWED_DISTRIBUTION_COMMIT>
-   git tag -a vX.Y.Z <REVIEWED_DISTRIBUTION_COMMIT> -m "Shoal Action vX.Y.Z"
+   git switch --detach <VERIFIED_POST_MERGE_COMMIT>
+   git tag -a vX.Y.Z <VERIFIED_POST_MERGE_COMMIT> -m "Shoal Action vX.Y.Z"
    git push origin refs/tags/vX.Y.Z
    ```
 

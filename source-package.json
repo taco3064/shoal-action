@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "sourceRepository": "taco3064/shoal-app",
-  "sourceCommit": "35e9d766e9f1abfebcc0bef75af373d299cd9132",
-  "sourceCandidateTree": "7c9262b251613db89518d65858f1da12a1a6d290",
+  "sourceCommit": "38db6e8503a0d1c41bc95be97f2fb6fa6a1cf1c3",
+  "sourceCandidateTree": "76d72f6696150a4b1d3cb193f7c3112559918cd6",
   "packageCommand": "npm run package:action",
-  "packageManifestSha256": "30403f6d5991cceac965825a16a503b68cd1da79e0b62fd946a0478c925a1e14"
+  "packageManifestSha256": "2a2397fc86225acdf2cca7dd9bb1f84b317f3068a8f4665ac8d4dfc00a181f0d"
 }

@@ -2,7 +2,7 @@ import { currentReviewerSummaryContract, isSupportedReviewerSummaryContract, } f
 export const summarySchemaVersion = currentReviewerSummaryContract.summarySchemaVersion;
 export function createReviewerSummary(repositoryId, metrics) {
     return {
-        metrics: assertPrimitiveMetrics(metrics),
+        metrics: parseV2Metrics(metrics),
         protocolVersion: currentReviewerSummaryContract.protocolVersion,
         reviewerNode: {
             repositoryId: assertPositiveInteger(repositoryId, 'reviewerNode.repositoryId'),
@@ -20,12 +20,8 @@ export function validateReviewerSummary(value, expectedContract = currentReviewe
     if (typeof value.summarySchemaVersion !== 'number') {
         throw new Error('Reviewer Summary summarySchemaVersion is unsupported.');
     }
-    const candidateContract = {
-        protocolVersion: value.protocolVersion,
-        summarySchemaVersion: value.summarySchemaVersion,
-    };
-    if (!isSupportedReviewerSummaryContract(candidateContract)) {
-        throw new Error('Reviewer Summary protocolVersion is unsupported.');
+    if (!isSupportedReviewerSummaryContract(expectedContract)) {
+        throw new Error('Trusted Reviewer Summary contract is unsupported.');
     }
     if (value.protocolVersion !== expectedContract.protocolVersion
         || value.summarySchemaVersion !== expectedContract.summarySchemaVersion) {
@@ -34,34 +30,67 @@ export function validateReviewerSummary(value, expectedContract = currentReviewe
     if (!isRecord(value.reviewerNode)) {
         throw new Error('Reviewer Summary reviewerNode must be an object.');
     }
-    return createReviewerSummary(assertPositiveInteger(value.reviewerNode.repositoryId, 'reviewerNode.repositoryId'), parseMetrics(value.metrics));
+    const reviewerNode = {
+        repositoryId: assertPositiveInteger(value.reviewerNode.repositoryId, 'reviewerNode.repositoryId'),
+    };
+    // Only the trusted binding selects the parser; candidate declarations merely
+    // have to match it. Legacy metrics retain their four-field shape.
+    if (expectedContract.summarySchemaVersion === 1) {
+        return {
+            protocolVersion: 1,
+            summarySchemaVersion: 1,
+            reviewerNode,
+            metrics: parseV1Metrics(value.metrics),
+        };
+    }
+    return {
+        protocolVersion: 1,
+        summarySchemaVersion: 2,
+        reviewerNode,
+        metrics: parseV2Metrics(value.metrics),
+    };
 }
 export function stringifyReviewerSummary(summary) {
     const validated = validateReviewerSummary(summary);
     return `${JSON.stringify(validated, null, 2)}\n`;
 }
-function parseMetrics(value) {
+const legacyMetricKeys = [
+    'invalidReviewCommentCount',
+    'reReviewRequestIssueCount',
+    'reviewBackedStarCount',
+    'validReviewRequestIssueCount',
+];
+function parseV1Metrics(value) {
+    const metrics = assertMetricKeys(value, legacyMetricKeys);
+    return assertLegacyMetrics(metrics);
+}
+function parseV2Metrics(value) {
+    const metrics = assertMetricKeys(value, [
+        ...legacyMetricKeys,
+        'pendingReviewRequestCount',
+        'completedReviewRequestCount',
+    ]);
+    const result = {
+        ...assertLegacyMetrics(metrics),
+        pendingReviewRequestCount: assertNonNegativeInteger(metrics.pendingReviewRequestCount, 'metrics.pendingReviewRequestCount'),
+        completedReviewRequestCount: assertNonNegativeInteger(metrics.completedReviewRequestCount, 'metrics.completedReviewRequestCount'),
+    };
+    if (result.pendingReviewRequestCount + result.completedReviewRequestCount
+        !== result.validReviewRequestIssueCount) {
+        throw new Error('Pending plus completed requests must equal valid review requests.');
+    }
+    return result;
+}
+function assertMetricKeys(value, expectedKeys) {
     if (!isRecord(value)) {
         throw new Error('Reviewer Summary metrics must be an object.');
     }
-    const keys = Object.keys(value).sort();
-    const expectedKeys = [
-        'invalidReviewCommentCount',
-        'reReviewRequestIssueCount',
-        'reviewBackedStarCount',
-        'validReviewRequestIssueCount',
-    ];
-    if (keys.join('\n') !== expectedKeys.join('\n')) {
-        throw new Error('Reviewer Summary metrics must contain exactly the primitive MVP metrics.');
+    if (Object.keys(value).sort().join('\n') !== [...expectedKeys].sort().join('\n')) {
+        throw new Error('Reviewer Summary metrics must contain exactly its schema primitive metrics.');
     }
-    return assertPrimitiveMetrics({
-        invalidReviewCommentCount: value.invalidReviewCommentCount,
-        reReviewRequestIssueCount: value.reReviewRequestIssueCount,
-        reviewBackedStarCount: value.reviewBackedStarCount,
-        validReviewRequestIssueCount: value.validReviewRequestIssueCount,
-    });
+    return value;
 }
-function assertPrimitiveMetrics(metrics) {
+function assertLegacyMetrics(metrics) {
     const primitiveMetrics = {
         invalidReviewCommentCount: assertNonNegativeInteger(metrics.invalidReviewCommentCount, 'metrics.invalidReviewCommentCount'),
         reReviewRequestIssueCount: assertNonNegativeInteger(metrics.reReviewRequestIssueCount, 'metrics.reReviewRequestIssueCount'),
@@ -72,13 +101,11 @@ function assertPrimitiveMetrics(metrics) {
     return primitiveMetrics;
 }
 function assertPrimitiveMetricInvariants(metrics) {
-    if (metrics.reReviewRequestIssueCount
-        > metrics.validReviewRequestIssueCount) {
+    if (metrics.reReviewRequestIssueCount > metrics.validReviewRequestIssueCount) {
         throw new Error('metrics.reReviewRequestIssueCount must not exceed '
             + 'metrics.validReviewRequestIssueCount.');
     }
-    const initialReviewRequestCount = metrics.validReviewRequestIssueCount
-        - metrics.reReviewRequestIssueCount;
+    const initialReviewRequestCount = metrics.validReviewRequestIssueCount - metrics.reReviewRequestIssueCount;
     if (metrics.reviewBackedStarCount > initialReviewRequestCount) {
         throw new Error('metrics.reviewBackedStarCount must not exceed initial review requests.');
     }

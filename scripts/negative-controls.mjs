@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { cp, mkdtemp, readFile, rm, writeFile, unlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -80,6 +80,29 @@ try {
   await verifySourceCheckout(source, provenanceRoot);
   await writeFile(join(source, 'package.json'), '{"changed":true}');
   await expectFailure(() => verifySourceCheckout(source, provenanceRoot), 'dirty source checkout');
+  // Exercise the staged verifier's gate in an isolated repository. No source
+  // reproduction should start when any candidate content is omitted.
+  await import('node:fs/promises').then((fs) => fs.mkdir(join(source, 'scripts')));
+  for (const script of ['verify-candidate.mjs', 'verify-distribution.mjs', 'verify-source-checkout.mjs']) {
+    await cp(join(repositoryRoot, 'scripts', script), join(source, 'scripts', script));
+  }
+  git(['add', '.']);
+  const rejectedCandidate = (flags, expected) => {
+    const result = spawnSync(process.execPath, [join(source, 'scripts/verify-candidate.mjs'),
+      join(temporaryRoot, 'absent-source'), ...flags], {
+      encoding: 'utf8', env: { ...process.env, EXPECTED_SHA: '' },
+    });
+    if (result.status !== 1 || !result.stderr.includes(expected)) {
+      throw new Error(`Candidate gate did not reject omitted content: ${result.stderr}`);
+    }
+    count += 1;
+  };
+  rejectedCandidate([], 'Distribution candidate must be clean.');
+  await writeFile(join(source, 'package.json'), '{"unstaged":true}');
+  rejectedCandidate(['--staged'], 'no unstaged or untracked files');
+  git(['add', '.']);
+  await writeFile(join(source, 'omitted.txt'), 'untracked candidate');
+  rejectedCandidate(['--staged'], 'no unstaged or untracked files');
   console.log(`Negative controls passed: ${count} fail-closed cases.`);
 } finally {
   await rm(temporaryRoot, { force: true, recursive: true });

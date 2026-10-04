@@ -18,9 +18,10 @@ const policyCommit = 'b'.repeat(40);
 const initialMetrics = {
   invalidReviewCommentCount: 0, reReviewRequestIssueCount: 0,
   reviewBackedStarCount: 1, validReviewRequestIssueCount: 1,
+  pendingReviewRequestCount: 0, completedReviewRequestCount: 1,
 };
 const summary = (metrics) => ({
-  protocolVersion: 1, summarySchemaVersion: 1,
+  protocolVersion: 1, summarySchemaVersion: 2,
   reviewerNode: { repositoryId: reviewerId }, metrics,
 });
 const repository = (overrides = {}) => ({
@@ -100,8 +101,16 @@ async function run(candidate, mutate = () => {}) {
     });
     assert.deepEqual(failures, []);
     assert.equal(result.code, 0, result.stderr);
-    assert.ok(requests.includes('/repos/requester/station'), 'Requester resolution must execute.');
-    return JSON.parse(await readFile(join(workspace, 'reviewer-summary.json'), 'utf8'));
+    if (routes['/repos/reviewer/station/issues'].some((entry) => entry.body.startsWith('### Repository name'))) {
+      assert.ok(requests.includes('/repos/requester/station'), 'Requester resolution must execute.');
+    }
+    const emitted = JSON.parse(await readFile(join(workspace, 'reviewer-summary.json'), 'utf8'));
+    assert.equal(emitted.protocolVersion, 1);
+    assert.equal(emitted.summarySchemaVersion, 2);
+    assert.deepEqual(Object.keys(emitted.metrics).sort(), Object.keys(initialMetrics).sort());
+    assert.equal(emitted.metrics.pendingReviewRequestCount + emitted.metrics.completedReviewRequestCount,
+      emitted.metrics.validReviewRequestIssueCount);
+    return emitted;
   } finally {
     server.closeAllConnections();
     await new Promise((closed) => server.close(closed));
@@ -117,7 +126,7 @@ const scenarios = [
   ['Manual Review', (r) => r[commentsPath].shift(), initialMetrics],
   ['admitted pending Request', (r) => {
     r[commentsPath].pop(); r[issuesPath][0].state = 'open';
-  }, { ...initialMetrics, reviewBackedStarCount: 0 }],
+  }, { ...initialMetrics, reviewBackedStarCount: 0, pendingReviewRequestCount: 1, completedReviewRequestCount: 0 }],
   ['Re-review and invalid formal result', (r) => {
     r[issuesPath].push(issue(2));
     r['/repos/reviewer/station/issues/2/comments'] = [];
@@ -128,7 +137,7 @@ const scenarios = [
       comment(judgment({ type: 'RE_REVIEWED' }), false, 4),
       comment(judgment({ type: 'RE_REVIEWED', targetCommit: 'malformed' }), false, 5),
     );
-  }, { ...initialMetrics, invalidReviewCommentCount: 1, reReviewRequestIssueCount: 1, validReviewRequestIssueCount: 2 }],
+  }, { ...initialMetrics, invalidReviewCommentCount: 1, reReviewRequestIssueCount: 1, validReviewRequestIssueCount: 2, completedReviewRequestCount: 2 }],
   ['unaccepted duplicate trigger', (r) => {
     r[issuesPath].push(issue(2));
     r['/repos/reviewer/station/issues/2/comments'] = [comment({ type: 'NO_NEW_REVIEW_BASIS' })];
@@ -144,8 +153,86 @@ const scenarios = [
     r['/repos/reviewer/station'].owner = author;
     r[commentsPath].forEach((entry) => { entry.user = author; });
     r['/users/requester/starred'] = r['/users/reviewer/starred'];
-  }, { ...initialMetrics, reviewBackedStarCount: 0, validReviewRequestIssueCount: 0 }],
+  }, { ...initialMetrics, reviewBackedStarCount: 0, validReviewRequestIssueCount: 0, completedReviewRequestCount: 0 }],
 ];
+const changedCommit = 'c'.repeat(40);
+function acceptTrigger(routes, number = 2, id = 3, commit = changedCommit) {
+  routes[issuesPath].push(issue(number));
+  routes[`/repos/reviewer/station/issues/${number}/comments`] = [];
+  routes[commentsPath].push(comment({ type: 'RE_REVIEW_REQUESTED', reviewerNodeId: reviewerId,
+    targetRepositoryId: targetId, requestIssueNumber: number, reason: 'TARGET_CHANGED',
+    eligibilityTargetCommit: commit, reviewPolicyCommit: policyCommit }, false, id));
+}
+const pendingEpoch = { ...initialMetrics, reReviewRequestIssueCount: 1,
+  validReviewRequestIssueCount: 2, pendingReviewRequestCount: 1 };
+const completedEpoch = { ...pendingEpoch, pendingReviewRequestCount: 0, completedReviewRequestCount: 2 };
+scenarios.push(
+  ['Initial FAIL completes workload', (r) => {
+    r[commentsPath][1] = comment(judgment({ verdict: 'FAIL', actualStarState: false }), false, 2);
+    r['/users/reviewer/starred'] = [];
+  }, { ...initialMetrics, reviewBackedStarCount: 0 }],
+  ['invalid Initial result remains pending', (r) => {
+    r[commentsPath][1] = comment(judgment({ targetCommit: 'malformed' }), false, 2);
+  }, { ...initialMetrics, reviewBackedStarCount: 0, invalidReviewCommentCount: 1,
+    pendingReviewRequestCount: 1, completedReviewRequestCount: 0 }],
+  ['pending Re-review with open converged basis', (r) => {
+    acceptTrigger(r); r[issuesPath][0].state = 'open';
+  }, pendingEpoch],
+  ['closed terminal no-new-basis completion without judgment', (r) => {
+    acceptTrigger(r);
+  }, completedEpoch],
+  ['closed terminal Target drift remains pending', (r) => {
+    acceptTrigger(r); r['/repos/requester/target/branches/main'].commit.sha = changedCommit;
+  }, { ...pendingEpoch, reviewBackedStarCount: 0 }],
+  ['closed terminal Policy drift remains pending', (r) => {
+    acceptTrigger(r); r['/repos/reviewer/station/commits'][0].sha = changedCommit;
+  }, { ...pendingEpoch, reviewBackedStarCount: 0 }],
+  ['Re-review PASS completes workload', (r) => {
+    acceptTrigger(r); r[commentsPath].push(comment(judgment({ type: 'RE_REVIEWED' }), false, 4));
+  }, completedEpoch],
+  ['Re-review FAIL completes workload', (r) => {
+    acceptTrigger(r); r[commentsPath].push(comment(judgment({ type: 'STAR_REVOKED',
+      verdict: 'FAIL', actualStarState: false }), false, 4)); r['/users/reviewer/starred'] = [];
+  }, { ...completedEpoch, reviewBackedStarCount: 0 }],
+  ['invalid Re-review does not complete open epoch', (r) => {
+    acceptTrigger(r); r[issuesPath][0].state = 'open';
+    r[commentsPath].push(comment(judgment({ type: 'RE_REVIEWED', targetCommit: 'malformed' }), false, 4));
+  }, pendingEpoch],
+  ['closed drifted epoch with invalid result remains pending', (r) => {
+    acceptTrigger(r); r['/repos/requester/target/branches/main'].commit.sha = changedCommit;
+    r[commentsPath].push(comment(judgment({ type: 'RE_REVIEWED', targetCommit: 'malformed' }), false, 4));
+  }, { ...pendingEpoch, reviewBackedStarCount: 0, invalidReviewCommentCount: 1 }],
+  ['multiple triggers completed by one judgment', (r) => {
+    acceptTrigger(r); acceptTrigger(r, 3, 4, 'd'.repeat(40));
+    r[commentsPath].push(comment(judgment({ type: 'RE_REVIEWED' }), false, 5));
+  }, { ...completedEpoch, reReviewRequestIssueCount: 2, validReviewRequestIssueCount: 3,
+    completedReviewRequestCount: 3 }],
+  ['later epoch remains pending after completed epoch', (r) => {
+    acceptTrigger(r); r[commentsPath].push(comment(judgment({ type: 'RE_REVIEWED' }), false, 4));
+    acceptTrigger(r, 3, 5, 'd'.repeat(40)); r[issuesPath][0].state = 'open';
+    r[commentsPath].reverse(); // Same timestamps: numeric comment ID must restore order.
+  }, { ...pendingEpoch, reReviewRequestIssueCount: 2, validReviewRequestIssueCount: 3,
+    completedReviewRequestCount: 2 }],
+  ['superseded non-judgment close does not invent history', (r) => {
+    acceptTrigger(r); acceptTrigger(r, 3, 4, 'd'.repeat(40)); r[issuesPath][0].state = 'open';
+  }, { ...pendingEpoch, reReviewRequestIssueCount: 2, validReviewRequestIssueCount: 3,
+    pendingReviewRequestCount: 2 }],
+  ['chronology precedes numeric ID', (r) => {
+    acceptTrigger(r, 2, 50);
+    r[commentsPath].at(-1).created_at = '2026-10-01T01:00:00Z';
+    const result = comment(judgment({ type: 'RE_REVIEWED' }), false, 4);
+    result.created_at = '2026-10-01T02:00:00Z';
+    r[commentsPath].push(result); r[commentsPath].reverse();
+  }, completedEpoch],
+  ['malformed Request excludes workload', (r) => {
+    r[issuesPath][0].body = 'not a Request';
+  }, { ...initialMetrics, reviewBackedStarCount: 0, validReviewRequestIssueCount: 0,
+    completedReviewRequestCount: 0 }],
+  ['invalid Request excludes workload', (r) => {
+    r[commentsPath] = [comment({ type: 'INVALID_REQUEST' })];
+  }, { ...initialMetrics, reviewBackedStarCount: 0, validReviewRequestIssueCount: 0,
+    completedReviewRequestCount: 0 }],
+);
 for (const [name, mutate, metrics] of scenarios) {
   // Root really is non-fork with no parent; the direct fork differs only in Membership.
   const actualRoot = await run(repository(), mutate);
@@ -166,7 +253,7 @@ for (const [name, overrides] of [
   ['fork without parent', { id: 400, fork: true }],
 ]) {
   const rejected = await run(repository(overrides));
-  assert.deepEqual(rejected, summary({ ...initialMetrics, reviewBackedStarCount: 0, validReviewRequestIssueCount: 0 }), name);
+  assert.deepEqual(rejected, summary({ ...initialMetrics, reviewBackedStarCount: 0, validReviewRequestIssueCount: 0, completedReviewRequestCount: 0 }), name);
   checks += 1;
   console.log(`Packaged entry point rejected: ${name}.`);
 }

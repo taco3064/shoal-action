@@ -11,6 +11,7 @@
     "verify": "node scripts/verify-distribution.mjs",
     "smoke": "node scripts/smoke.mjs",
     "test:runtime": "node scripts/runtime-regression.mjs",
+    "test:compatibility": "node scripts/schema-compatibility.mjs",
     "negative": "node scripts/negative-controls.mjs",
     "verify:source": "node scripts/verify-distribution.mjs --source-package"
   }

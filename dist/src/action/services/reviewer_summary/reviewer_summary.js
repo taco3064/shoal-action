@@ -1,6 +1,8 @@
 import { parseProtocolComment, parseRequestPayload, } from '~app/protocol/services/review_protocol';
 import { createReviewerSummary, } from '~app/protocol/services/reviewer_summary_schema';
-import { countInvalidFormalResults, getCurrentAdmittedRequest, getInvalidFormalResultIncrement, isJudgmentLifecycleValid, isPriorInitialReviewEvidence, } from './review_lifecycle';
+import { countInvalidFormalResults, getCurrentAdmittedRequest, } from './review_lifecycle';
+import { analyzeReviewThread } from './review_thread';
+import { countCompletedWork } from './workload';
 import { isValidRequesterNode } from './requester_membership';
 export async function computeReviewerSummary(input) {
     const currentPolicyCommit = await input.resolvers.resolveCurrentReviewPolicyCommit();
@@ -8,11 +10,15 @@ export async function computeReviewerSummary(input) {
     const canonicalThreads = await collectCanonicalThreads(input, validRequests);
     const currentInitialReviewThreads = canonicalThreads.filter(hasCurrentRequest);
     const acceptedReReviewIssues = collectAcceptedReReviewIssues(validRequests, canonicalThreads);
+    const validReviewRequestIssueCount = currentInitialReviewThreads.length + acceptedReReviewIssues.length;
+    const completedReviewRequestCount = countCompletedWork(canonicalThreads, acceptedReReviewIssues, currentPolicyCommit);
     return createReviewerSummary(input.reviewerNode.id, {
+        completedReviewRequestCount,
+        pendingReviewRequestCount: validReviewRequestIssueCount - completedReviewRequestCount,
         invalidReviewCommentCount: countInvalidFormalResults(canonicalThreads),
         reReviewRequestIssueCount: acceptedReReviewIssues.length,
         reviewBackedStarCount: countReviewBackedStars(currentInitialReviewThreads, currentPolicyCommit),
-        validReviewRequestIssueCount: currentInitialReviewThreads.length + acceptedReReviewIssues.length,
+        validReviewRequestIssueCount,
     });
 }
 async function collectValidRequests(input) {
@@ -49,13 +55,14 @@ async function collectCanonicalThreads(input, validRequests) {
         const target = currentRequest?.target
             ?? await resolveAdmittedTarget(input, issue, admission.value);
         const targetRepositoryId = admission.value.targetRepositoryId;
-        const reviewEvents = analyzeReviewThread(issue, input.reviewerNode, targetRepositoryId);
+        const reviewEvents = await analyzeReviewThread(input, issue, targetRepositoryId);
         upsertCanonicalThread(byTargetId, {
             currentRequest,
             evidence: 'admission',
             invalidFormalResultCount: reviewEvents.invalidFormalResultCount,
             issue,
-            lifecycleEvents: await collectLifecycleEvents(input, issue, targetRepositoryId),
+            lifecycleEvents: reviewEvents.lifecycleEvents,
+            orderedEvidence: reviewEvents.orderedEvidence,
             target,
             targetRepositoryId,
             validJudgments: reviewEvents.validJudgments,
@@ -69,7 +76,7 @@ async function collectCanonicalThreads(input, validRequests) {
         if (admission.kind !== 'none') {
             continue;
         }
-        const reviewEvents = analyzeReviewThread(request.issue, input.reviewerNode, request.target.id);
+        const reviewEvents = await analyzeReviewThread(input, request.issue, request.target.id);
         const evidence = findManualJudgmentEvidence(request, reviewEvents.validJudgments);
         if (!evidence) {
             continue;
@@ -79,7 +86,8 @@ async function collectCanonicalThreads(input, validRequests) {
             evidence,
             invalidFormalResultCount: reviewEvents.invalidFormalResultCount,
             issue: request.issue,
-            lifecycleEvents: await collectLifecycleEvents(input, request.issue, request.target.id),
+            lifecycleEvents: reviewEvents.lifecycleEvents,
+            orderedEvidence: reviewEvents.orderedEvidence,
             target: request.target,
             targetRepositoryId: request.target.id,
             validJudgments: reviewEvents.validJudgments,
@@ -152,62 +160,6 @@ function findManualJudgmentEvidence(request, judgments) {
     return judgments.some((judgment) => judgment.targetRepositoryId === request.target.id)
         ? 'manual-judgment'
         : null;
-}
-async function collectLifecycleEvents(input, issue, targetRepositoryId) {
-    const events = [];
-    let hasPriorInitialReviewEvidence = false;
-    for (const comment of issue.comments) {
-        const parsed = parseProtocolComment(comment.body);
-        if (isPriorInitialReviewEvidence(parsed, comment, input.reviewerNode, targetRepositoryId)) {
-            hasPriorInitialReviewEvidence = true;
-            continue;
-        }
-        if (parsed.kind !== 'lifecycle') {
-            continue;
-        }
-        if (parsed.value.reviewerNodeId !== input.reviewerNode.id
-            || parsed.value.targetRepositoryId !== targetRepositoryId) {
-            continue;
-        }
-        if (!hasPriorInitialReviewEvidence) {
-            continue;
-        }
-        if (comment.author.id === input.reviewerNode.owner.id) {
-            events.push(parsed.value);
-            continue;
-        }
-        if (await input.resolvers.isAllowedLifecycleAutomation(comment, parsed.value, input.reviewerNode)) {
-            events.push(parsed.value);
-        }
-    }
-    return events;
-}
-function analyzeReviewThread(issue, reviewerNode, targetRepositoryId) {
-    const validJudgments = [];
-    let hasPriorInitialReviewEvidence = false;
-    let invalidFormalResultCount = 0;
-    for (const comment of issue.comments) {
-        const parsed = parseProtocolComment(comment.body);
-        if (parsed.kind === 'invalid-formal-result') {
-            invalidFormalResultCount += getInvalidFormalResultIncrement(issue);
-            hasPriorInitialReviewEvidence ||= isPriorInitialReviewEvidence(parsed, comment, reviewerNode, targetRepositoryId);
-            continue;
-        }
-        if (parsed.kind !== 'judgment') {
-            continue;
-        }
-        const lifecycleValid = isJudgmentLifecycleValid(parsed.value, hasPriorInitialReviewEvidence);
-        hasPriorInitialReviewEvidence ||= isPriorInitialReviewEvidence(parsed, comment, reviewerNode, targetRepositoryId);
-        if (comment.author.id !== reviewerNode.owner.id
-            || parsed.value.reviewerNodeId !== reviewerNode.id
-            || parsed.value.targetRepositoryId !== targetRepositoryId
-            || !lifecycleValid) {
-            invalidFormalResultCount += getInvalidFormalResultIncrement(issue);
-            continue;
-        }
-        validJudgments.push(parsed.value);
-    }
-    return { invalidFormalResultCount, validJudgments };
 }
 function getLatestJudgment(judgments) {
     return judgments.at(-1) ?? null;
