@@ -3,6 +3,7 @@ package hosted
 import (
 	"context"
 	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -306,10 +307,13 @@ func TestCompatibilityRefusesBeforeSemantic(t *testing.T) {
 	}
 }
 
-func TestFrozenHostedCallerReviewReReviewAndDrift(t *testing.T) {
-	caller, err := os.ReadFile("testdata/reviewer-summary-hosted.yml")
+func TestFinalHostedCallerReviewReReviewAndDrift(t *testing.T) {
+	caller, err := os.ReadFile("testdata/reviewer-summary-final-hosted.yml")
 	if err != nil {
 		t.Fatal(err)
+	}
+	if fmt.Sprintf("%x", sha256.Sum256(caller)) != "b9162cae864bbd6e00745346f37f701fe5c003d3367cc3dc37c6fb394f9d8105" {
+		t.Fatal("final canonical caller bytes changed")
 	}
 	f := newFixture(t)
 	f.managed[".github/workflows/reviewer-summary.yml"] = string(caller)
@@ -337,6 +341,23 @@ func TestFrozenHostedCallerReviewReReviewAndDrift(t *testing.T) {
 		}
 	}
 }
+func TestPreliminaryCallerHasNoPlatformAuthority(t *testing.T) {
+	caller, err := os.ReadFile("testdata/reviewer-summary-hosted.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, operation := range []string{"review", "re-review"} {
+		f := newFixture(t)
+		f.managed[".github/workflows/reviewer-summary.yml"] = string(caller)
+		c := config(t, "PASS")
+		c.Operation = operation
+		o := run(context.Background(), c, client(f))
+		if o.Runtime.Status != "REFUSED" || o.Runtime.EffectAttempts != 0 || len(f.comments) != 0 || f.star || f.state != "open" {
+			t.Fatalf("unaccepted preliminary caller %s reached effects: %+v", operation, o)
+		}
+	}
+}
+
 func TestPolicyIsCompleteOrRefused(t *testing.T) {
 	f := newFixture(t)
 	f.policy = strings.Repeat("a", 128001)

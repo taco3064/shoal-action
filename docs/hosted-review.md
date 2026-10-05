@@ -9,9 +9,9 @@ not replace the root Reviewer Summary Action or implement a second lifecycle.
 | Fact | Value |
 | --- | --- |
 | Action path | `taco3064/shoal-action/hosted-review@<FULL_ACTION_COMMIT_SHA>` |
-| Pinned runtime candidate | `taco3064/gh-shoal@978d2fec6b036ecd9453a95b3e2fcbd4b44ec6a3` |
-| Pinned source tree | `c87e3c411e18cc8300b7c4402e8072229babfbec` |
-| Exact module candidate | `v0.8.1-0.20261005115422-978d2fec6b03` |
+| Exact runtime source | `taco3064/gh-shoal@230a97af21c45b8d8f0cdcd4a02d13dddd2c4730` |
+| Pinned source tree | `db8cfb7ed4cb54c4bc60569b5e55ed36fa68452c` |
+| Runtime module generation | `v0.10.0` |
 | Public interface | `github.com/taco3064/gh-shoal/reviewruntime` |
 | Copilot | `@github/copilot` exactly `1.0.91` |
 | Host toolchain | Go `1.25.1`, Node `24.19.0` |
@@ -27,12 +27,19 @@ The resolved Copilot executable version is verified before every semantic batch.
 An install failure yields a non-judgment process refusal when semantic work is
 required. No semantic installation or invocation is needed to infer a FAIL.
 
-The full accepted **post-merge Action commit** is the station's eventual pin. PR
-head identity is review evidence, not a claim that a merge has happened. The owner
-or Shaper must confirm the post-merge tree equals the accepted candidate tree,
-wait for its exact-head CI, and hand off that commit to `shoal-station#17`. This
-delivery does not merge, tag, publish, or admit a new station generation. A release
-tag may mirror the verified commit; it never replaces immutable commit identity.
+The full accepted **post-merge Action commit** is the station's eventual pin.
+This refresh belongs to the continuous `shoal-app#49` delivery train: after
+independent Acceptance and exact-head verification, publish the compatible
+runtime and Hosted Action, then update only the station auxiliary workflow pin.
+The post-merge Action tree must equal the accepted candidate tree. A release tag
+may mirror the verified commit; it never replaces immutable commit identity.
+The canonical caller remains byte-identical at
+`b9162cae864bbd6e00745346f37f701fe5c003d3367cc3dc37c6fb394f9d8105`,
+bound by accepted Platform source `05e2a5603c5c7da56708ed71aebfe02fe728af7a`.
+The previously owner-published preliminary caller `11259fa...` was not accepted
+by Platform and is now refused. All five accepted older workflow bindings remain
+unchanged. Final auxiliary Hosted trust and broker configuration remain owned by
+`shoal-app#49`, independently of base Station Readiness.
 
 ## Invocation and authority
 
@@ -131,7 +138,7 @@ Action step; the caller must independently preserve Summary execution for those.
 {
   "formatVersion": 1,
   "operation": "review",
-  "runtimeSource": "978d2fec6b036ecd9453a95b3e2fcbd4b44ec6a3",
+  "runtimeSource": "230a97af21c45b8d8f0cdcd4a02d13dddd2c4730",
   "copilotVersion": "1.0.91",
   "runtime": {"status": "PARTIAL", "effectAttempts": 1, "faults": [{"code": "AGENT_UNAVAILABLE", "detail": "See structured hosted failure codes; public state remains authoritative"}]},
   "failures": ["COPILOT_BUDGET_UNAVAILABLE", "AGENT_UNAVAILABLE"],
@@ -195,10 +202,11 @@ in that job use synthetic GitHub fixtures, so no external Shoal state is mutated
 The live test is opt-in locally (`SHOAL_LIVE_TOKEN` and `SHOAL_LIVE_COPILOT`) and
 must not be claimed as passed when it is skipped.
 
-Before #17 consumes this delivery, confirm independent Acceptance, exact PR/main
-head CI, accepted-tree preservation at merge, and the exact post-merge Action
-commit. #17 then owns canonical schedule/mode/Summary wiring; #49 owns broker and
-Platform admission. The runtime capability snapshot continues to refuse station
+Before #49 updates the station auxiliary pin, confirm independent Acceptance,
+exact PR/main head CI, accepted-tree preservation at merge, and the exact
+post-merge Action commit. The existing #17 station schedule/mode/Summary wiring
+remains unchanged; #49 owns the coordinated refresh, broker and final Platform
+admission. The runtime capability snapshot continues to refuse station
 generations not yet admitted by the Platform. This adapter does not bypass it.
 
 

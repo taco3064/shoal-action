@@ -16,7 +16,7 @@ import (
 	"github.com/taco3064/gh-shoal/reviewruntime"
 )
 
-const SourceCommit = "978d2fec6b036ecd9453a95b3e2fcbd4b44ec6a3"
+const SourceCommit = "230a97af21c45b8d8f0cdcd4a02d13dddd2c4730"
 const CopilotVersion = "1.0.91"
 
 type Config struct {

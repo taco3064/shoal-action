@@ -9,9 +9,9 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const hosted = resolve(root, 'hosted-review');
 const recordPath = resolve(root, 'hosted-source-package.json');
-const commit = '978d2fec6b036ecd9453a95b3e2fcbd4b44ec6a3';
-const tree = 'c87e3c411e18cc8300b7c4402e8072229babfbec';
-const moduleVersion = 'v0.8.1-0.20261005115422-978d2fec6b03';
+const commit = '230a97af21c45b8d8f0cdcd4a02d13dddd2c4730';
+const tree = 'db8cfb7ed4cb54c4bc60569b5e55ed36fa68452c';
+const moduleVersion = 'v0.10.0';
 const hash = (b) => createHash('sha256').update(b).digest('hex');
 async function inventory(directory) {
   const files = {};
@@ -52,7 +52,7 @@ export async function verifyHosted(source, { packageCandidate = false, directory
   for (const [path, digest] of Object.entries(upstreamFiles)) {
     assert.equal(hash(execFileSync('git', ['-C', source, 'show', `${commit}:${path}`])), digest, `Stale or hand-edited runtime: ${path}`);
   }
-  for (const [local, upstream] of [['review-request.yml', 'review-request.yml'], ['reviewer-summary-current.yml', 'reviewer-summary-current.yml'], ['reviewer-summary-hosted.yml', 'reviewer-summary-hosted.yml']]) {
+  for (const [local, upstream] of [['review-request.yml', 'review-request.yml'], ['reviewer-summary-current.yml', 'reviewer-summary-current.yml'], ['reviewer-summary-hosted.yml', 'reviewer-summary-hosted.yml'], ['reviewer-summary-final-hosted.yml', 'reviewer-summary-final-hosted.yml']]) {
     assert.equal(hash(await readFile(resolve(directory, 'testdata', local))), hash(execFileSync('git', ['-C', source, 'show', `${commit}:reviewruntime/testdata/${upstream}`])));
   }
   // Reproduce exclusively from the identity-checked source checkout. This also

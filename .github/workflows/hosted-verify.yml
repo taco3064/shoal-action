@@ -22,6 +22,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+      - name: Verify exact event candidate
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
         with:
           go-version: '1.25.1'
@@ -34,7 +37,7 @@ jobs:
         run: |
           git init "$RUNNER_TEMP/gh-shoal-source"
           git -C "$RUNNER_TEMP/gh-shoal-source" remote add origin https://github.com/taco3064/gh-shoal.git
-          git -C "$RUNNER_TEMP/gh-shoal-source" fetch --depth=1 origin 978d2fec6b036ecd9453a95b3e2fcbd4b44ec6a3
+          git -C "$RUNNER_TEMP/gh-shoal-source" fetch --depth=1 origin 230a97af21c45b8d8f0cdcd4a02d13dddd2c4730
           git -C "$RUNNER_TEMP/gh-shoal-source" checkout --detach FETCH_HEAD
       - name: Complete source correspondence and stale-byte negative controls
         run: |
@@ -57,6 +60,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+      - name: Verify exact event candidate
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
         with:
           go-version: '1.25.1'
