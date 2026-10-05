@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { verifyHosted } from './hosted-package.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = process.argv[2];
-for (const control of ['runtime-edit', 'runtime-omission', 'runtime-addition', 'copilot-pin', 'adapter-edit']) {
+for (const control of ['runtime-edit', 'runtime-omission', 'runtime-addition', 'copilot-pin', 'adapter-edit', 'module-replace', 'vendor-module-metadata', 'hosted-fixture-edit']) {
   const temp = await mkdtemp(resolve(tmpdir(), 'shoal-host-negative-'));
   try {
     const directory = resolve(temp, 'hosted-review');
@@ -20,6 +20,12 @@ for (const control of ['runtime-edit', 'runtime-omission', 'runtime-addition', '
       await writeFile(p, (await readFile(p, 'utf8')).replaceAll('1.0.91', '1.0.92'));
     }
     if (control === 'adapter-edit') await writeFile(resolve(directory, 'host.go'), `${await readFile(resolve(directory, 'host.go'), 'utf8')}\n// hand edit\n`);
+    if (control === 'module-replace') {
+      const p = resolve(directory, 'go.mod');
+      await writeFile(p, `${await readFile(p, 'utf8')}\nreplace github.com/taco3064/gh-shoal => ../untrusted\n`);
+    }
+    if (control === 'vendor-module-metadata') await writeFile(resolve(directory, 'vendor/modules.txt'), '# untrusted module\n');
+    if (control === 'hosted-fixture-edit') await writeFile(resolve(directory, 'testdata/reviewer-summary-hosted.yml'), 'untrusted caller\n');
     await assert.rejects(() => verifyHosted(source, { directory }), `Control did not reject ${control}`);
     console.log(`PASS hosted negative: ${control}`);
   } finally { await rm(temp, { recursive: true, force: true }); }

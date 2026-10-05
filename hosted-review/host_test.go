@@ -305,6 +305,38 @@ func TestCompatibilityRefusesBeforeSemantic(t *testing.T) {
 		t.Fatalf("unsafe refusal: %+v", o)
 	}
 }
+
+func TestFrozenHostedCallerReviewReReviewAndDrift(t *testing.T) {
+	caller, err := os.ReadFile("testdata/reviewer-summary-hosted.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := newFixture(t)
+	f.managed[".github/workflows/reviewer-summary.yml"] = string(caller)
+	c := config(t, "PASS")
+	for _, operation := range []string{"review", "re-review"} {
+		c.Operation = operation
+		if operation == "re-review" {
+			f.head = changed
+		}
+		o := run(context.Background(), c, client(f))
+		if o.Runtime.Status != "COMPLETED" || o.StopSemanticWork || f.state != "closed" || !f.star {
+			t.Fatalf("frozen caller %s: %+v", operation, o)
+		}
+	}
+	if len(f.comments) != 3 {
+		t.Fatal("unexpected Initial/Re-review evidence count")
+	}
+	for _, operation := range []string{"review", "re-review"} {
+		f := newFixture(t)
+		f.managed[".github/workflows/reviewer-summary.yml"] = string(caller) + " "
+		c.Operation = operation
+		o := run(context.Background(), c, client(f))
+		if o.Runtime.Status != "REFUSED" || o.Runtime.EffectAttempts != 0 || len(f.comments) != 0 || f.star {
+			t.Fatalf("one-byte drift %s: %+v", operation, o)
+		}
+	}
+}
 func TestPolicyIsCompleteOrRefused(t *testing.T) {
 	f := newFixture(t)
 	f.policy = strings.Repeat("a", 128001)

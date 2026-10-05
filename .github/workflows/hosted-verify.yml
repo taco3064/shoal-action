@@ -29,12 +29,12 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: '24.19.0'
-      - name: Fetch exact accepted shared runtime
+      - name: Fetch exact pinned shared runtime
         shell: bash
         run: |
           git init "$RUNNER_TEMP/gh-shoal-source"
           git -C "$RUNNER_TEMP/gh-shoal-source" remote add origin https://github.com/taco3064/gh-shoal.git
-          git -C "$RUNNER_TEMP/gh-shoal-source" fetch --depth=1 origin 2c01d267ffe7c910bbf82ceba7553e3bb961056a
+          git -C "$RUNNER_TEMP/gh-shoal-source" fetch --depth=1 origin 978d2fec6b036ecd9453a95b3e2fcbd4b44ec6a3
           git -C "$RUNNER_TEMP/gh-shoal-source" checkout --detach FETCH_HEAD
       - name: Complete source correspondence and stale-byte negative controls
         run: |

@@ -9,9 +9,9 @@ not replace the root Reviewer Summary Action or implement a second lifecycle.
 | Fact | Value |
 | --- | --- |
 | Action path | `taco3064/shoal-action/hosted-review@<FULL_ACTION_COMMIT_SHA>` |
-| Accepted runtime source | `taco3064/gh-shoal@2c01d267ffe7c910bbf82ceba7553e3bb961056a` |
-| Accepted source tree | `7ffa7ec52f296292337a086fdae7d9b7f380b72d` |
-| Verified module release | `v0.8.0` |
+| Pinned runtime candidate | `taco3064/gh-shoal@978d2fec6b036ecd9453a95b3e2fcbd4b44ec6a3` |
+| Pinned source tree | `c87e3c411e18cc8300b7c4402e8072229babfbec` |
+| Exact module candidate | `v0.8.1-0.20261005115422-978d2fec6b03` |
 | Public interface | `github.com/taco3064/gh-shoal/reviewruntime` |
 | Copilot | `@github/copilot` exactly `1.0.91` |
 | Host toolchain | Go `1.25.1`, Node `24.19.0` |
@@ -131,7 +131,7 @@ Action step; the caller must independently preserve Summary execution for those.
 {
   "formatVersion": 1,
   "operation": "review",
-  "runtimeSource": "2c01d267ffe7c910bbf82ceba7553e3bb961056a",
+  "runtimeSource": "978d2fec6b036ecd9453a95b3e2fcbd4b44ec6a3",
   "copilotVersion": "1.0.91",
   "runtime": {"status": "PARTIAL", "effectAttempts": 1, "faults": [{"code": "AGENT_UNAVAILABLE", "detail": "See structured hosted failure codes; public state remains authoritative"}]},
   "failures": ["COPILOT_BUDGET_UNAVAILABLE", "AGENT_UNAVAILABLE"],
@@ -200,3 +200,25 @@ head CI, accepted-tree preservation at merge, and the exact post-merge Action
 commit. #17 then owns canonical schedule/mode/Summary wiring; #49 owns broker and
 Platform admission. The runtime capability snapshot continues to refuse station
 generations not yet admitted by the Platform. This adapter does not bypass it.
+
+
+### Coordinated source reproduction
+
+The pinned runtime commit/tree is the source identity. Verification archives its
+committed bytes with line-ending conversion disabled, runs Go vendor generation
+against that exact source in a temporary directory, and compares the complete
+vendor file set. The temporary local-module replacement is removed from generated
+vendor metadata; shipped go.mod contains no replacement. Reproduction performs no
+module-proxy resolution, so unpublished coordinated commits can be validated
+locally without substituting a mutable release. This does not grant review,
+release, or Platform admission to a candidate.
+
+After an explicit runtime-pin change, regenerate using:
+
+```text
+node scripts/hosted-package.mjs <exact-runtime-checkout> --refresh-vendor --package
+```
+
+Normal verification omits both mutation flags. CI must be able to fetch the exact
+runtime commit; local-only prerequisite commits must be published and reviewed
+before their dependent PR can pass remote verification.

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFile, writeFile, readdir, lstat, mkdtemp, cp, rm } from 'node:fs/promises';
+import { readFile, writeFile, readdir, lstat, mkdtemp, mkdir, cp, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { dirname, resolve, relative } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -9,8 +9,9 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const hosted = resolve(root, 'hosted-review');
 const recordPath = resolve(root, 'hosted-source-package.json');
-const commit = '2c01d267ffe7c910bbf82ceba7553e3bb961056a';
-const tree = '7ffa7ec52f296292337a086fdae7d9b7f380b72d';
+const commit = '978d2fec6b036ecd9453a95b3e2fcbd4b44ec6a3';
+const tree = 'c87e3c411e18cc8300b7c4402e8072229babfbec';
+const moduleVersion = 'v0.8.1-0.20261005115422-978d2fec6b03';
 const hash = (b) => createHash('sha256').update(b).digest('hex');
 async function inventory(directory) {
   const files = {};
@@ -28,11 +29,11 @@ async function inventory(directory) {
 }
 export async function verifyHosted(source, { packageCandidate = false, directory = hosted, record = recordPath } = {}) {
   const git = (args) => execFileSync('git', ['-C', source, ...args], { encoding: 'utf8' }).trim();
-  assert.equal(git(['rev-parse', 'HEAD']), commit, 'Wrong accepted runtime source commit');
-  assert.equal(git(['rev-parse', 'HEAD^{tree}']), tree, 'Wrong accepted runtime source tree');
+  assert.equal(git(['rev-parse', 'HEAD']), commit, 'Wrong pinned runtime source commit');
+  assert.equal(git(['rev-parse', 'HEAD^{tree}']), tree, 'Wrong pinned runtime source tree');
   assert.equal(git(['status', '--porcelain', '--untracked-files=all']), '', 'Source must be clean');
   const goMod = await readFile(resolve(directory, 'go.mod'), 'utf8');
-  assert.match(goMod, /require github\.com\/taco3064\/gh-shoal v0\.8\.0\s*$/u);
+  assert(goMod.trimEnd().endsWith(`require github.com/taco3064/gh-shoal ${moduleVersion}`), 'Wrong pinned module generation');
   assert(!goMod.includes('replace'), 'No runtime replacement permitted');
   const lock = JSON.parse(await readFile(resolve(directory, 'copilot/package-lock.json'), 'utf8'));
   assert.equal(lock.packages[''].dependencies['@github/copilot'], '1.0.91');
@@ -51,20 +52,18 @@ export async function verifyHosted(source, { packageCandidate = false, directory
   for (const [path, digest] of Object.entries(upstreamFiles)) {
     assert.equal(hash(execFileSync('git', ['-C', source, 'show', `${commit}:${path}`])), digest, `Stale or hand-edited runtime: ${path}`);
   }
-  for (const [local, upstream] of [['review-request.yml', 'review-request.yml'], ['reviewer-summary-current.yml', 'reviewer-summary-current.yml']]) {
+  for (const [local, upstream] of [['review-request.yml', 'review-request.yml'], ['reviewer-summary-current.yml', 'reviewer-summary-current.yml'], ['reviewer-summary-hosted.yml', 'reviewer-summary-hosted.yml']]) {
     assert.equal(hash(await readFile(resolve(directory, 'testdata', local))), hash(execFileSync('git', ['-C', source, 'show', `${commit}:reviewruntime/testdata/${upstream}`])));
   }
-  // Go's own vendor reproduction checks completeness: omitted imports/embed
-  // files, added vendor payloads and changed module records all fail equality.
-  const isolated = await mkdtemp(resolve(tmpdir(), 'shoal-host-reproduce-'));
+  // Reproduce exclusively from the identity-checked source checkout. This also
+  // supports coordinated, not-yet-published commits without trusting a proxy.
+  const reproduced = await reproduceVendor(source, directory);
   try {
-    await cp(directory, isolated, { recursive: true, filter: (path) => !path.split(/[\\/]/u).some((p) => p === 'node_modules' || p === 'vendor') });
-    execFileSync('go', ['mod', 'vendor'], { cwd: isolated, stdio: 'pipe', env: { ...process.env, GOTOOLCHAIN: 'local', GOFLAGS: '', GOENV: 'off' } });
-    assert.deepEqual(await inventory(resolve(isolated, 'vendor')), await inventory(resolve(directory, 'vendor')), 'Vendored payload is not reproducible');
-  } finally { await rm(isolated, { recursive: true, force: true }); }
+    assert.deepEqual(await inventory(resolve(reproduced, 'vendor')), await inventory(resolve(directory, 'vendor')), 'Vendored payload is not reproducible');
+  } finally { await rm(reproduced, { recursive: true, force: true }); }
   const evidence = {
     formatVersion: 1, sourceRepository: 'taco3064/gh-shoal', sourceCommit: commit, sourceTree: tree,
-    module: 'github.com/taco3064/gh-shoal', moduleVersion: 'v0.8.0', publicInterface: 'github.com/taco3064/gh-shoal/reviewruntime',
+    module: 'github.com/taco3064/gh-shoal', moduleVersion, publicInterface: 'github.com/taco3064/gh-shoal/reviewruntime',
     actionPath: 'hosted-review', goVersion: '1.25.1', copilotPackage: '@github/copilot', copilotVersion: '1.0.91',
     packaging: 'integrity-locked vendored Go source; compile offline on Linux with -mod=vendor -trimpath -buildvcs=false and CGO_ENABLED=0',
     verification: 'node scripts/hosted-package.mjs <exact-gh-shoal-checkout>',
@@ -74,8 +73,43 @@ export async function verifyHosted(source, { packageCandidate = false, directory
   else assert.deepEqual(JSON.parse(await readFile(record, 'utf8')), evidence, 'Complete hosted payload differs from correspondence record');
   return evidence;
 }
+async function reproduceVendor(source, directory) {
+  source = resolve(source);
+  const git = (...args) => execFileSync('git', ['-C', source, ...args], { encoding: 'utf8' }).trim();
+  assert.equal(git('rev-parse', 'HEAD'), commit, 'Wrong pinned source commit');
+  assert.equal(git('rev-parse', 'HEAD^{tree}'), tree, 'Wrong pinned source tree');
+  assert.equal(git('status', '--porcelain', '--untracked-files=all'), '', 'Source must be clean');
+  const isolated = await mkdtemp(resolve(tmpdir(), 'shoal-host-reproduce-'));
+  try {
+    await cp(directory, isolated, { recursive: true, filter: (path) => !path.split(/[\\/]/u).some((p) => p === 'node_modules' || p === 'vendor') });
+    // Archive committed bytes, not a Windows checkout's CRLF conversions.
+    const exactSource = resolve(isolated, '.runtime-source');
+    await mkdir(exactSource);
+    const archive = execFileSync('git', ['-c', 'core.autocrlf=false', '-C', source, 'archive', commit], { maxBuffer: 32 * 1024 * 1024 });
+    execFileSync('tar', ['-xf', '-', '-C', exactSource], { input: archive });
+    const options = { cwd: isolated, stdio: 'pipe', env: { ...process.env, GOTOOLCHAIN: 'local', GOFLAGS: '', GOENV: 'off', GOWORK: 'off', GOPROXY: 'off', GOSUMDB: 'off' } };
+    // Replacement exists only in the disposable reproduction directory. The
+    // committed go.mod is checked above and must never contain a replacement.
+    execFileSync('go', ['mod', 'edit', `-replace=github.com/taco3064/gh-shoal=${exactSource}`], options);
+    execFileSync('go', ['mod', 'vendor'], options);
+    const modules = resolve(isolated, 'vendor/modules.txt');
+    const lines = (await readFile(modules, 'utf8')).split('\n');
+    const header = `# github.com/taco3064/gh-shoal ${moduleVersion}`;
+    const normalized = lines.filter(line => !line.startsWith('# github.com/taco3064/gh-shoal => '))
+      .map(line => line.startsWith(header + ' => ') ? header : line).join('\n');
+    await writeFile(modules, normalized);
+    return isolated;
+  } catch (error) { await rm(isolated, { recursive: true, force: true }); throw error; }
+}
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const source = process.argv[2]; assert(source, 'An exact gh-shoal source checkout is required');
+  if (process.argv.includes('--refresh-vendor')) {
+    const reproduced = await reproduceVendor(source, hosted);
+    try {
+      await rm(resolve(hosted, 'vendor'), { recursive: true, force: true });
+      await cp(resolve(reproduced, 'vendor'), resolve(hosted, 'vendor'), { recursive: true });
+    } finally { await rm(reproduced, { recursive: true, force: true }); }
+  }
   const result = await verifyHosted(source, { packageCandidate: process.argv.includes('--package') });
   console.log(`Hosted correspondence verified: ${result.sourceCommit}; ${Object.keys(result.files).length} payload files; Copilot ${result.copilotVersion}`);
 }

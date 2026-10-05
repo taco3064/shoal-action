@@ -2,7 +2,9 @@ package hosted
 
 import (
 	"context"
+	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -41,9 +43,41 @@ func TestInterruptedSemanticExecution(t *testing.T) {
 	f := newFixture(t)
 	c := config(t, "timeout")
 	c.Timeout = 10 * time.Second
-	ctx, cancel := context.WithCancel(context.Background())
-	time.AfterFunc(200*time.Millisecond, cancel)
+	// Cancel after the semantic process starts, not during variable-speed Git preflight.
+	marker := filepath.Join(t.TempDir(), "semantic-started")
+	markerJSON, _ := json.Marshal(marker)
+	script, err := os.ReadFile(c.Copilot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	script = []byte(strings.Replace(string(script), "if(kind==='timeout')", "fs.writeFileSync("+string(markerJSON)+", 'ready');\nif(kind==='timeout')", 1))
+	if err := os.WriteFile(c.Copilot, script, 0600); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	started := make(chan bool, 1)
+	go func() {
+		ticker := time.NewTicker(10 * time.Millisecond)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				started <- false
+				return
+			case <-ticker.C:
+				if _, err := os.Stat(marker); err == nil {
+					started <- true
+					cancel()
+					return
+				}
+			}
+		}
+	}()
 	o := run(ctx, c, client(f))
+	if !<-started {
+		t.Fatal("semantic process did not start before cancellation deadline")
+	}
 	if !strings.Contains(strings.Join(o.Failures, ","), "COPILOT_INTERRUPTED") || f.star || f.state != "open" || len(f.comments) != 1 {
 		t.Fatalf("interruption became judgment: %+v", o)
 	}
