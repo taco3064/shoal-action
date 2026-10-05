@@ -1,8 +1,10 @@
-# Shoal Reviewer Summary Action
+# Shoal Actions
 
 `shoal-action` is the official **distribution repository** for the Shoal Reviewer Summary GitHub Marketplace Action. Reviewer Summary business logic, Protocol parsing, schemas, and the deterministic package source remain owned by [`taco3064/shoal-app`](https://github.com/taco3064/shoal-app).
 
-This repository intentionally contains the root `action.yml`, generated runtime payload, distribution verification, and release machinery only. Do not implement or hand-edit Reviewer Summary behavior here.
+The root `action.yml` remains Reviewer Summary. The separate [`hosted-review/action.yml`](hosted-review/action.yml) invokes the accepted `gh-shoal` public runtime with a pinned, isolated Copilot semantic adapter. Review / Re-review lifecycle logic remains owned by `gh-shoal`. Do not implement or hand-edit Reviewer Summary behavior here.
+
+Hosted Review's invocation, authority roles, failure contract, provenance and downstream `shoal-station#17` handoff are documented in [`docs/hosted-review.md`](docs/hosted-review.md). The two Actions have separate source records: `source-package.json` for Summary and `hosted-source-package.json` for Hosted Review.
 
 ## Usage
 

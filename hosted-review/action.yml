@@ -1,0 +1,96 @@
+name: Shoal Hosted Review
+description: Invoke an exact shared gh-shoal Review runtime with an isolated pinned Copilot Agent.
+inputs:
+  operation:
+    description: Shared runtime operation, review or re-review.
+    required: true
+  station:
+    description: Reviewer station owner/repository; must match the clean checkout origin.
+    required: true
+  station_directory:
+    description: Clean Reviewer station checkout, never a Target checkout.
+    default: '.'
+  copilot_token:
+    description: Workflow GITHUB_TOKEN with contents read and copilot-requests write.
+    required: true
+  read_token:
+    description: Explicit authoritative GitHub read credential.
+    required: true
+  lifecycle_token:
+    description: Separate station authority for Issue close/reopen only.
+    required: true
+  reviewer_token:
+    description: Short-lived Reviewer user authority for /user, Stars and owner-authored comments. No fallback.
+    required: true
+  max_ai_credits:
+    description: Per Copilot batch session soft ceiling (30..1000); not a run-level cumulative budget.
+    default: '30'
+  timeout_seconds:
+    description: Semantic process timeout (1..600 seconds).
+    default: '180'
+outputs:
+  result:
+    description: Credential-free single-line JSON formatVersion 1; runtime result and hosted failure codes.
+    value: ${{ steps.runtime.outputs.result }}
+  status:
+    description: NO_CHANGES, COMPLETED, REFUSED or PARTIAL from the shared runtime.
+    value: ${{ steps.runtime.outputs.status }}
+  stop_semantic_work:
+    description: Stop further semantic work when true; unrelated Summary may continue.
+    value: ${{ steps.runtime.outputs.stop_semantic_work }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+      with:
+        go-version: '1.25.1'
+        cache: false
+    - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+      with:
+        node-version: '24.19.0'
+    - name: Prepare isolated trusted host payload
+      id: payload
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        payload="$(mktemp -d "$RUNNER_TEMP/shoal-hosted-XXXXXX")"
+        cp "$ACTION_PATH/copilot/package.json" "$ACTION_PATH/copilot/package-lock.json" "$payload/"
+        printf 'directory=%s\n' "$payload" >> "$GITHUB_OUTPUT"
+        cd "$ACTION_PATH"
+        CGO_ENABLED=0 GOENV=off GOTOOLCHAIN=local GOFLAGS= go build -mod=vendor -trimpath -buildvcs=false -o "$payload/hosted-review" ./cmd/hosted-review
+    - name: Install integrity-locked Copilot outside the station
+      continue-on-error: true
+      shell: bash
+      env:
+        PAYLOAD_DIRECTORY: ${{ steps.payload.outputs.directory }}
+      run: npm ci --prefix "$PAYLOAD_DIRECTORY" --ignore-scripts --no-audit --no-fund
+    - name: Invoke shared deterministic runtime
+      id: runtime
+      shell: bash
+      env:
+        PAYLOAD_DIRECTORY: ${{ steps.payload.outputs.directory }}
+        SHOAL_OPERATION: ${{ inputs.operation }}
+        SHOAL_STATION: ${{ inputs.station }}
+        SHOAL_DIRECTORY: ${{ inputs.station_directory }}
+        SHOAL_SEMANTIC_TOKEN: ${{ inputs.copilot_token }}
+        SHOAL_READ_TOKEN: ${{ inputs.read_token }}
+        SHOAL_LIFECYCLE_TOKEN: ${{ inputs.lifecycle_token }}
+        SHOAL_PERSONAL_TOKEN: ${{ inputs.reviewer_token }}
+        SHOAL_MAX_CREDITS: ${{ inputs.max_ai_credits }}
+        SHOAL_TIMEOUT: ${{ inputs.timeout_seconds }}
+      run: |
+        set -euo pipefail
+        export SHOAL_NODE="$(command -v node)"
+        export SHOAL_COPILOT="$PAYLOAD_DIRECTORY/node_modules/@github/copilot/npm-loader.js"
+        "$PAYLOAD_DIRECTORY/hosted-review" # stdout is structured status only
+    - name: Remove ephemeral host payload
+      if: always()
+      shell: bash
+      env:
+        PAYLOAD_DIRECTORY: ${{ steps.payload.outputs.directory }}
+      run: |
+        if [[ -n "$PAYLOAD_DIRECTORY" && "$PAYLOAD_DIRECTORY" == "$RUNNER_TEMP"/shoal-hosted-* ]]; then
+          rm -rf -- "$PAYLOAD_DIRECTORY"
+        fi

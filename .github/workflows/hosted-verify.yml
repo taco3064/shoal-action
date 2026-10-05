@@ -1,0 +1,74 @@
+name: Verify Hosted Review
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hosted-verify-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hosted-correspondence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.25.1'
+          cache: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24.19.0'
+      - name: Fetch exact accepted shared runtime
+        shell: bash
+        run: |
+          git init "$RUNNER_TEMP/gh-shoal-source"
+          git -C "$RUNNER_TEMP/gh-shoal-source" remote add origin https://github.com/taco3064/gh-shoal.git
+          git -C "$RUNNER_TEMP/gh-shoal-source" fetch --depth=1 origin 2c01d267ffe7c910bbf82ceba7553e3bb961056a
+          git -C "$RUNNER_TEMP/gh-shoal-source" checkout --detach FETCH_HEAD
+      - name: Complete source correspondence and stale-byte negative controls
+        run: |
+          node scripts/hosted-package.mjs "$RUNNER_TEMP/gh-shoal-source"
+          node scripts/hosted-negative.mjs "$RUNNER_TEMP/gh-shoal-source"
+      - name: Hosted positive, negative, isolation and recovery controls
+        working-directory: hosted-review
+        run: |
+          go test -mod=vendor -race -count=1 ./...
+          CGO_ENABLED=0 go build -mod=vendor -trimpath -buildvcs=false -o "$RUNNER_TEMP/hosted-review" ./cmd/hosted-review
+      - name: Verification did not mutate candidate
+        run: test -z "$(git status --porcelain --untracked-files=all)"
+  hosted-live-semantic:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      copilot-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.25.1'
+          cache: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24.19.0'
+      - name: Install exact Copilot with locked integrity
+        run: npm ci --prefix hosted-review/copilot --ignore-scripts --no-audit --no-fund
+      - name: Real Copilot PASS, FAIL, hostile Target and both shared runtime operations
+        working-directory: hosted-review
+        env:
+          SHOAL_LIVE_TOKEN: ${{ github.token }}
+          SHOAL_LIVE_COPILOT: ${{ github.workspace }}/hosted-review/copilot/node_modules/@github/copilot/npm-loader.js
+        run: go test -mod=vendor -count=1 -timeout=15m -run '^TestLiveControlledCopilotRuntime$' -v .
