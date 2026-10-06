@@ -1,4 +1,11 @@
 import assert from 'node:assert/strict';
+import { register } from 'node:module';
+register('../dist/loader.mjs', import.meta.url);
+const { encodeEvidenceDocument, renderEvidenceComment, reviewProtocol } = await import('../dist/src/protocol/services/review_protocol/index.js');
+const canonical = (record) => {
+  if ('repositoryName' in record || 'verdict' in record || 'eligibilityTargetCommit' in record) return renderEvidenceComment(record, { requestAuthor: 'requester', explanation: 'Policy checked.' });
+  return reviewProtocol.evidence.startSentinel + '\n' + encodeEvidenceDocument(record) + '\n' + reviewProtocol.evidence.endSentinel;
+};
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -30,7 +37,7 @@ const repository = (overrides = {}) => ({
 });
 const comment = (payload, admission = false, id = 1) => ({
   id, user: reviewer, created_at: '2026-10-01T00:00:00Z',
-  body: `${admission ? 'shoal-review-admission:v1' : 'shoal-review-event:v1'}\n${JSON.stringify(payload)}`,
+  body: canonical(payload),
 });
 const judgment = (overrides = {}) => ({
   type: 'REVIEWED', reviewerNodeId: reviewerId, targetRepositoryId: targetId,
@@ -233,6 +240,15 @@ scenarios.push(
   }, { ...initialMetrics, reviewBackedStarCount: 0, validReviewRequestIssueCount: 0,
     completedReviewRequestCount: 0 }],
 );
+for (const body of ['Review Result: PASS', 'REVIEWED', JSON.stringify(judgment()),
+  'shoal-review-event:v1\n' + JSON.stringify(judgment()),
+  canonical(judgment()) + canonical(judgment()),
+  canonical(judgment()).replace('"formatVersion":1', '"formatVersion":99'),
+  canonical(judgment()).replace('"formatVersion":1', '"formatVersion":1,"formatVersion":1')]) {
+  scenarios.push(['non-authoritative / rejected envelope', (r) => {
+    r[commentsPath][1].body = body; r[issuesPath][0].state = 'open';
+  }, { ...initialMetrics, reviewBackedStarCount: 0, pendingReviewRequestCount: 1, completedReviewRequestCount: 0 }]);
+}
 for (const [name, mutate, metrics] of scenarios) {
   // Root really is non-fork with no parent; the direct fork differs only in Membership.
   const actualRoot = await run(repository(), mutate);

@@ -29,6 +29,23 @@ export const allowedCanonicalReviewRequestFormDigests = new Set([
 // explicit Reviewer Summary Protocol/schema contract.
 export const allowedSummaryWorkflows = new Map([
     [
+        // shoal-app#49 Stage A: final Phase 4 caller; auxiliary Hosted trust is separate.
+        'b9162cae864bbd6e00745346f37f701fe5c003d3367cc3dc37c6fb394f9d8105',
+        {
+            actionCommit: '4918e1afe85f15f8fe263eaf2866cd02a1f70a62',
+            reviewerSummary: { protocolVersion: 1, summarySchemaVersion: 2 },
+        },
+    ],
+    [
+        // shoal-station#13: independently accepted workload generation.
+        'f6cda44c7e6e12117dac3c1f1c145bb69283eb3cfe66690ba67adddd3b4e89bd',
+        {
+            actionCommit: '4918e1afe85f15f8fe263eaf2866cd02a1f70a62',
+            // Freeze this production binding independently of future source evolution.
+            reviewerSummary: { protocolVersion: 1, summarySchemaVersion: 2 },
+        },
+    ],
+    [
         // shoal-station#9, b93d42c0: integrity checks and deterministic recovery.
         '3b66f6c4afb545bbf1ad847aed96d0dd8c336e6df100c6b898250a0bddf58fd6',
         {

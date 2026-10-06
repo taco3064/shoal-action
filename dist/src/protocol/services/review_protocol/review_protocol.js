@@ -1,4 +1,5 @@
 import { reviewProtocol } from './contract';
+import { decodeEvidenceDocument } from './evidence_document';
 import { getRecognizableInitialReviewEvidence } from './initial_review_evidence';
 import { isRfc3339DateTime } from './rfc3339';
 const commitPattern = /^[0-9a-f]{40}$/;
@@ -8,63 +9,32 @@ export function getProtocolVersion() {
     return Number(reviewProtocol.protocolVersion);
 }
 export function parseProtocolComment(body) {
-    const admissionEnvelope = parseMarkerJson(body, reviewProtocol.admission.marker);
-    if (admissionEnvelope.kind === 'present') {
-        const admission = admissionEnvelope.parsed
-            ? parseAdmissionRecord(admissionEnvelope.parsed)
-            : null;
-        if (admission) {
-            return { kind: 'admission', value: admission };
-        }
-        return isFormalResultCandidate(admissionEnvelope.payloadText, admissionEnvelope.parsed)
-            ? invalidFormalResult(admissionEnvelope.payloadText, admissionEnvelope.parsed)
-            : { kind: 'none' };
+    const envelope = decodeEvidenceDocument(body);
+    if (envelope.kind !== 'present') {
+        return { kind: 'none' };
     }
-    const eventEnvelope = parseMarkerJson(body, reviewProtocol.event.marker);
-    if (eventEnvelope.kind !== 'present') {
-        const candidateBody = getFormalResultCandidateBody(body);
-        return isFormalResultCandidate(candidateBody)
-            ? invalidFormalResult(candidateBody)
-            : { kind: 'none' };
+    const record = envelope.document.record;
+    const admission = !('type' in record) && parseAdmissionRecord(record);
+    if (admission) {
+        return { kind: 'admission', value: admission };
     }
-    if (!eventEnvelope.parsed) {
-        return isFormalResultCandidate(eventEnvelope.payloadText)
-            ? invalidFormalResult(eventEnvelope.payloadText)
-            : { kind: 'none' };
-    }
-    const lifecycle = parseLifecycleEvent(eventEnvelope.parsed);
+    const lifecycle = parseLifecycleEvent(record);
     if (lifecycle) {
         return { kind: 'lifecycle', value: lifecycle };
     }
-    const judgment = parseJudgmentEvent(eventEnvelope.parsed);
+    const judgment = parseJudgmentEvent(record);
     if (judgment) {
         return { kind: 'judgment', value: judgment };
     }
-    return isJudgmentCandidateValue(eventEnvelope.parsed)
-        ? invalidFormalResult(eventEnvelope.payloadText, eventEnvelope.parsed)
+    return isJudgmentCandidateValue(record)
+        ? invalidFormalResult(record)
         : { kind: 'none' };
 }
-function invalidFormalResult(payloadText, parsed) {
+function invalidFormalResult(record) {
     return {
-        initialReviewEvidence: getRecognizableInitialReviewEvidence(payloadText, parsed),
+        initialReviewEvidence: getRecognizableInitialReviewEvidence(record),
         kind: 'invalid-formal-result',
     };
-}
-function parseMarkerJson(body, marker) {
-    const prefix = `${marker}\n`;
-    if (!body.startsWith(prefix)) {
-        return { kind: 'absent' };
-    }
-    const payloadText = body.slice(prefix.length).trim();
-    if (!payloadText) {
-        return { kind: 'present', payloadText, parsed: null };
-    }
-    try {
-        return { kind: 'present', payloadText, parsed: JSON.parse(payloadText) };
-    }
-    catch {
-        return { kind: 'present', payloadText, parsed: null };
-    }
 }
 function parseAdmissionRecord(value) {
     if (!isRecord(value)) {
@@ -215,62 +185,11 @@ function isReReviewReason(value) {
         || value === 'POLICY_CHANGED'
         || value === 'TARGET_AND_POLICY_CHANGED');
 }
-function isFormalResultCandidate(body, parsed) {
-    if (isJudgmentCandidateValue(parsed ?? parseLooseJson(body))) {
-        return true;
-    }
-    return looksLikeStructuredFormalResultText(body);
-}
-function parseLooseJson(body) {
-    try {
-        return JSON.parse(body);
-    }
-    catch {
-        return null;
-    }
-}
 function isJudgmentCandidateValue(value) {
     return Boolean(isRecord(value)
         && (isJudgmentType(value.type)
             || 'verdict' in value
             || 'actualStarState' in value));
-}
-function looksLikeStructuredFormalResultText(value) {
-    const normalized = value.trim();
-    const firstLine = normalized
-        .split('\n')
-        .map((line) => line.trim())
-        .find(Boolean);
-    if (!firstLine) {
-        return false;
-    }
-    if (/^Review Result:\s*(PASS|FAIL)\b/u.test(firstLine)) {
-        return true;
-    }
-    if (reviewProtocol.event.judgmentTypes.includes(firstLine)) {
-        return true;
-    }
-    return (normalized.startsWith('{')
-        && /(?:^|[\n{,])\s*"(type|verdict|actualStarState)"\s*:/u.test(normalized));
-}
-function getFormalResultCandidateBody(body) {
-    const trimmed = body.trim();
-    const markers = [
-        reviewProtocol.event.marker,
-        reviewProtocol.admission.marker,
-    ];
-    for (const marker of markers) {
-        if (trimmed.startsWith(marker)) {
-            return stripFirstLine(trimmed);
-        }
-    }
-    return trimmed;
-}
-function stripFirstLine(value) {
-    const newlineIndex = value.indexOf('\n');
-    return newlineIndex === -1
-        ? ''
-        : value.slice(newlineIndex + 1).trim();
 }
 function isJudgmentStarStateConsistent(type, verdict, actualStarState) {
     if (actualStarState !== (verdict === 'PASS')) {

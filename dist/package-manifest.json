@@ -13,8 +13,8 @@
     },
     {
       "path": "protocol/review-v1.json",
-      "sha256": "cb48872de2192a3da2602740ece32c09b2fdbd9866dffdfd20ab600032528ff3",
-      "size": 1699
+      "sha256": "e2bca65dcb0f50419f42cde6f119e7a1773784bd89d72d05bd6764c3b7e56a79",
+      "size": 1869
     },
     {
       "path": "src/action/index.js",
@@ -87,9 +87,14 @@
       "size": 11
     },
     {
+      "path": "src/protocol/services/hosted_capability/index.js",
+      "sha256": "4d02164551f04c86c10656ce6f27a8a9470833f8cdfc7accb21ad460d60f6aa5",
+      "size": 1166
+    },
+    {
       "path": "src/protocol/services/network_compatibility/index.js",
-      "sha256": "cdaf90013ee3e71873d1cd0f0472d4fefa5b17c11a15c6c631cd87fd6c566fe6",
-      "size": 2775
+      "sha256": "1839238325176d09f6a2fc365e61049a90bee15fbd7b902f1572879934a9fbed",
+      "size": 3543
     },
     {
       "path": "src/protocol/services/review_protocol/contract.js",
@@ -97,14 +102,24 @@
       "size": 131
     },
     {
+      "path": "src/protocol/services/review_protocol/evidence_comment.js",
+      "sha256": "bbabf39f52ba6120418395e9d196b0f7c58a93411eda051c443900b666786611",
+      "size": 1959
+    },
+    {
+      "path": "src/protocol/services/review_protocol/evidence_document.js",
+      "sha256": "ba9deaf53ae0e90262d687188d536619f1cb0aa0a0a7224e1b8ce83e923109ce",
+      "size": 2502
+    },
+    {
       "path": "src/protocol/services/review_protocol/index.js",
-      "sha256": "385b16b473a694543481af35d05d565da574b9af983c7764cb07a65e29b1baf1",
-      "size": 181
+      "sha256": "8b53c73ac27d1038e4e9620a5c24c195ef56f7d0f2adade099599986a0eeae12",
+      "size": 327
     },
     {
       "path": "src/protocol/services/review_protocol/initial_review_evidence.js",
-      "sha256": "92669f145daa6c85c718a93da77286fe023e7c3cc7f86aeb95d239283d6e363d",
-      "size": 2073
+      "sha256": "a8b7ce10d09f1b0b8c5fdbd672dded748c7db74c00207d58bc71d0e6e188ddaa",
+      "size": 251
     },
     {
       "path": "src/protocol/services/review_protocol/request_payload.js",
@@ -113,8 +128,8 @@
     },
     {
       "path": "src/protocol/services/review_protocol/review_protocol.js",
-      "sha256": "56f3972655b6cd48e21cd1d0d2360419e91e97b7bea0b0abf236b4b7e6b5ffed",
-      "size": 9655
+      "sha256": "0b7cc970f3fd2e6815eef7fec64309477bc79fe37851c60e0670150eadb736cf",
+      "size": 6939
     },
     {
       "path": "src/protocol/services/review_protocol/rfc3339.js",

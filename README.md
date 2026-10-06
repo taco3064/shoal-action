@@ -6,6 +6,10 @@ The root `action.yml` remains Reviewer Summary. The separate [`hosted-review/act
 
 Hosted Review's invocation, authority roles, failure contract, provenance and downstream `shoal-station#17` handoff are documented in [`docs/hosted-review.md`](docs/hosted-review.md). The two Actions have separate source records: `source-package.json` for Summary and `hosted-source-package.json` for Hosted Review.
 
+## Human-first evidence generation
+
+The root Summary distribution now consumes shoal-app#65, source commit `94947abae5f90b5b18233f2ad6d710fe5cd247d9`, tree `eb818036210d02243fdf968044334fb5e174639d`. Its package manifest SHA-256 is `3db6da4a8ea77eaa54c1bf630dfd492248c0aa217762208819c9ff1100ba1bd6`. Canonical evidence format 1 keeps Protocol 1 / Summary Schema 2 and existing S/R/Q/I/P/C semantics. Hosted Review remains on its independently recorded source until shoal-action#18. The immutable verified root Action commit is the shoal-station#26 Stage A handoff.
+
 ## Usage
 
 Production Shoal workflows must pin the Action by an **exact full commit SHA**:
