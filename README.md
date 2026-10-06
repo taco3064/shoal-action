@@ -123,34 +123,37 @@ Only tag verification is automated; GitHub Release / Marketplace publication rem
 
 These commands use only read-only public GitHub API requests (optional `GITHUB_TOKEN` for rate limits). A required read failure refuses the check. Distribution recovery, release deletion/de-listing, supplementary CI provenance, and component versions cannot change the Action SHA accepted by `shoal-app`. Reviewer Summary Artifact Attestation and the canonical Summary Workflow trust envelope remain mandatory independently.
 
-## Hosted evidence completeness
+## Hosted minimum sufficient evidence
 
-Hosted Copilot remains tool-isolated. The read-only host collects the target's
-all-state Issue and PR bodies (including closed Issues and merged/closed PRs),
-repository-wide Issue discussion and inline PR comments, releases, and commit
-history anchored at the reviewed commit. Repository metadata includes fork,
-parent, archive and maintenance fields. Each history collection records its API
-endpoint; the observation timestamp distinguishes mutable GitHub history from
-immutable Policy/target Git blobs. Counts alone are not review criteria.
+Hosted Copilot remains tool-isolated. The read-only host starts with 20 recent
+records per collection: all-state Issues and PRs (including closed/merged),
+Issue discussion, inline PR comments, releases, and commits anchored at the
+reviewed commit. Repository metadata includes fork, archive and maintenance
+fields. This is a disclosed evidence window, not an exhaustive history audit.
+Counts alone are not review criteria. Mutable history carries its observation
+time and endpoint; Policy and target files remain pinned to immutable Git blobs.
 
-Collections follow pagination to completion. API errors, malformed pages and
-collection timeouts stop semantic work. History has a 750,000-byte projected
-budget per target; the entire evidence batch is bounded to 1,000,000 bytes, and
-paginated transport to 16,000,000 bytes per request. Exceeding a bound produces
-`EVIDENCE_INCOMPLETE`, never a silently truncated history or a FAIL judgment.
-Large repositories may therefore remain Pending; this change does not claim
-that bounded Hosted input equals an unrestricted local agent's investigation.
+Initial bodies are UTF-8 excerpts with explicit omitted-byte counts and stable
+references. Copilot can request only the decisive complete records or files
+needed by the Policy, up to eight references per round and three retrieval
+rounds. The host resolves only observed references and commit-verified blobs;
+it never executes model-supplied URLs, commands or paths. Minimum sufficient
+verifiable evidence is enough unless the Policy explicitly requires an audit.
 
-Target files still use the disclosed 24-file/192KB selection. When that selection
-or uncollected evidence prevents evaluating a required criterion, Copilot may
-return `{"status":"INSUFFICIENT_EVIDENCE","reason":"specific evidence needed"}`.
-The host turns this into `EVIDENCE_INCOMPLETE` before the shared runtime can apply
-any judgment. The whole batch remains pending; existing Stars and formal review
-events are preserved. FAIL requires an evidenced Policy violation, not evidence
-missing because the platform did not supply it. Release metadata does not by
-itself prove a working deployment. PR review-submission summaries and deployment
-checks are not included in these collections and must not be inferred absent.
+The initial target file selection remains 24 files/192KB; an immutable file
+catalog supports additional reads up to 128KB per file. History indexes are
+bounded to 750KB and a prompt to 1MB. The full requested history record limit is
+128KB. API failures, invalid references, exhausted retrieval or unresolved
+criteria produce operational refusal, never a fabricated FAIL. Copilot may
+return INSUFFICIENT_EVIDENCE with the specific remaining gap. Existing judgments
+and Stars remain owned by the shared runtime. A release record by itself does
+not prove a working deployment; sources not inspected must not be called absent.
 
-This adapter update does not rewrite prior review events or repin deployed
-Station workflows. New exact Action pins and their app trust admission remain a
-separate rollout step after candidate validation.
+General GitHub pagination accepts page and before/after cursors while preserving
+all query filters. Numeric repository aliases must match an independently read
+repository ID; foreign origins and unrelated paths remain refused. Transport is
+bounded to 16MB per paginated request. Each Copilot process uses the configured
+soft credit ceiling and timeout; a batch can use at most four semantic processes.
+
+This adapter does not rewrite prior events or change re-review eligibility.
+Exact Action pins and broker trust admission require a separate verified rollout.

@@ -21,6 +21,7 @@ type Copilot struct {
 	Timeout              time.Duration
 	Credits              int
 	Failures             []string
+	Explanation          string
 }
 type limitedBuffer struct {
 	b        bytes.Buffer
@@ -96,39 +97,55 @@ func (c *Copilot) Judge(ctx context.Context, w reviewruntime.SemanticWork) ([]by
 		return fail("GITHUB_READ_UNAVAILABLE")
 	}
 	// Use stdin rather than argv: policy/Target bytes can exceed OS argument limits.
-	args := []string{"--no-auto-update", "--no-custom-instructions", "--disable-builtin-mcps", "--available-tools=none", "--deny-tool=shell", "--deny-tool=write", "--deny-tool=url", "--no-ask-user", "--no-remote", "--no-remote-export", "--log-level=none", "--silent", "--stream=off", "--output-format=json", "--max-ai-credits=" + credits(c.Credits)}
-	bounded, cancel := context.WithTimeout(ctx, c.Timeout)
-	defer cancel()
-	cmd := exec.CommandContext(bounded, c.Node, append([]string{c.Program}, args...)...)
-	cmd.Dir = work
-	cmd.Env = env
-	cmd.Stdin = strings.NewReader(Prompt(evidence))
-	cmd.WaitDelay = 2 * time.Second
-	isolateProcess(cmd)
-	var out, stderr limitedBuffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err = cmd.Run()
-	if bounded.Err() != nil {
-		if errors.Is(bounded.Err(), context.DeadlineExceeded) {
-			return fail("COPILOT_TIMEOUT")
+	for round := 0; round <= 3; round++ {
+		args := []string{"--no-auto-update", "--no-custom-instructions", "--disable-builtin-mcps", "--available-tools=none", "--deny-tool=shell", "--deny-tool=write", "--deny-tool=url", "--no-ask-user", "--no-remote", "--no-remote-export", "--log-level=none", "--silent", "--stream=off", "--output-format=json", "--max-ai-credits=" + credits(c.Credits)}
+		bounded, cancel := context.WithTimeout(ctx, c.Timeout)
+		defer cancel()
+		cmd := exec.CommandContext(bounded, c.Node, append([]string{c.Program}, args...)...)
+		cmd.Dir = work
+		cmd.Env = env
+		cmd.Stdin = strings.NewReader(Prompt(evidence) + evidenceInstructions(round))
+		cmd.WaitDelay = 2 * time.Second
+		isolateProcess(cmd)
+		var out, stderr limitedBuffer
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
+		err = cmd.Run()
+		if bounded.Err() != nil {
+			if errors.Is(bounded.Err(), context.DeadlineExceeded) {
+				return fail("COPILOT_TIMEOUT")
+			}
+			return fail("COPILOT_INTERRUPTED")
 		}
-		return fail("COPILOT_INTERRUPTED")
-	}
-	if out.exceeded || stderr.exceeded {
-		return fail("COPILOT_RESULT_MALFORMED")
-	}
-	if err != nil {
-		return fail(ClassifyFailure(string(out.b.Bytes()) + "\n" + string(stderr.b.Bytes())))
-	}
-	result, code := DecodeEvents(out.b.Bytes())
-	if code != "" {
-		if code == "COPILOT_PROCESS_FAILURE" {
-			code = ClassifyFailure(string(out.b.Bytes()) + "\n" + string(stderr.b.Bytes()))
+		if out.exceeded || stderr.exceeded {
+			return fail("COPILOT_RESULT_MALFORMED")
 		}
-		return fail(code)
+		if err != nil {
+			return fail(ClassifyFailure(string(out.b.Bytes()) + "\n" + string(stderr.b.Bytes())))
+		}
+		result, code := DecodeEvents(out.b.Bytes())
+		c.Explanation = semanticExplanation(out.b.Bytes())
+		if code != "" {
+			if code == "COPILOT_PROCESS_FAILURE" {
+				code = ClassifyFailure(string(out.b.Bytes()) + "\n" + string(stderr.b.Bytes()))
+			}
+			return fail(code)
+		}
+		var requested struct {
+			Requests []evidenceRequest `json:"evidenceRequests"`
+		}
+		if json.Unmarshal(result, &requested) == nil && requested.Requests != nil {
+			if round == 3 {
+				return fail("EVIDENCE_INCOMPLETE")
+			}
+			if err := expandEvidence(collectionContext, c.Reads, &evidence, requested.Requests); err != nil {
+				return fail("EVIDENCE_INCOMPLETE")
+			}
+			continue
+		}
+		return result, nil
 	}
-	return result, nil
+	return fail("EVIDENCE_INCOMPLETE")
 }
 func credits(n int) string { b, _ := json.Marshal(n); return string(b) }
 

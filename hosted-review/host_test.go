@@ -295,7 +295,7 @@ func TestInsufficientEvidencePreservesEndorsementAndPending(t *testing.T) {
 	}
 }
 
-func TestHistoryCollectsClosedAndMergedAcrossPages(t *testing.T) {
+func TestHistorySelectsRecentClosedAndMergedEvidence(t *testing.T) {
 	g := newGitHub("read", "read-secret", "reviewer/station")
 	g.client = &http.Client{Transport: transportFunc(func(r *http.Request) (*http.Response, error) {
 		body := `[]`
@@ -307,16 +307,7 @@ func TestHistoryCollectsClosedAndMergedAcrossPages(t *testing.T) {
 			if r.URL.Query().Get("state") != "all" {
 				t.Fatal("open-only issue history")
 			}
-			body = `[{"number":1,"state":"open","body":"current work"}]`
-			if r.URL.Query().Get("page") == "2" {
-				body = `[{"number":2,"state":"closed","body":"design decision #3","html_url":"https://github.com/alice/project/issues/2"}]`
-			} else {
-				next := *r.URL
-				q := next.Query()
-				q.Set("page", "2")
-				next.RawQuery = q.Encode()
-				header.Set("Link", "<"+next.String()+">; rel=\"next\"")
-			}
+			body = `[{"number":1,"state":"open","body":"current work"},{"number":2,"state":"closed","body":"design decision #3","html_url":"https://github.com/alice/project/issues/2"}]`
 		case "/repos/alice/project/pulls":
 			if r.URL.Query().Get("state") != "all" {
 				t.Fatal("open-only PR history")
@@ -370,7 +361,7 @@ func TestHistoryBudgetLeavesPendingWithoutFalseFAIL(t *testing.T) {
 		}
 		return f.api(r)
 	})}
-	o := run(context.Background(), config(t, "FAIL"), httpClient)
+	o := run(context.Background(), config(t, "insufficient"), httpClient)
 	if !strings.Contains(strings.Join(o.Failures, ","), "EVIDENCE_INCOMPLETE") || f.state != "open" || !f.star || len(f.comments) != 1 {
 		t.Fatalf("history bound silently became negative judgment: %+v", o)
 	}
@@ -478,6 +469,80 @@ func TestOperationAllowlistAndPagination(t *testing.T) {
 	for _, link := range []string{`<https://evil.invalid/repos/a/b/issues?page=2>; rel="next"`, `<https://api.github.com/repos/a/b/secrets?page=2>; rel="next"`, `<https://api.github.com/repos/a/b/issues?per_page=1&page=2>; rel="next"`} {
 		if _, e := nextPage(link, current.URL); e == nil {
 			t.Fatalf("unsafe pagination accepted: %s", link)
+		}
+	}
+}
+
+func TestVerifiedRepositoryAliasAndCursorPagination(t *testing.T) {
+	g := newGitHub("read", "read-secret", "reviewer/station")
+	requests := 0
+	g.client = &http.Client{Transport: transportFunc(func(r *http.Request) (*http.Response, error) {
+		requests++
+		body := `[]`
+		header := http.Header{}
+		switch r.URL.Path {
+		case "/repos/alice/project":
+			body = `{"id":55,"full_name":"alice/project"}`
+		case "/repos/alice/project/issues":
+			body = `[{"number":1}]`
+			header.Set("Link", `<https://api.github.com/repositories/55/issues?state=all&per_page=100&after=opaque%3D&page=2>; rel="next"`)
+		case "/repositories/55/issues":
+			if r.URL.Query().Get("after") != "opaque=" {
+				t.Fatal("cursor lost")
+			}
+			body = `[{"number":2,"state":"closed"}]`
+		default:
+			t.Fatalf("unexpected endpoint: %s", r.URL)
+		}
+		return &http.Response{StatusCode: 200, Header: header, Body: io.NopCloser(strings.NewReader(body)), Request: r}, nil
+	})}
+	b, err := g.Do(context.Background(), reviewruntime.Request{Method: "GET", Endpoint: "repos/alice/project/issues?state=all&per_page=100", Paginate: true})
+	if err != nil || requests != 3 || !strings.Contains(string(b), `"number":2`) {
+		t.Fatalf("real pagination format failed: %s %v", b, err)
+	}
+	current, _ := http.NewRequest("GET", "https://api.github.com/repos/alice/project/issues?state=all&per_page=100", nil)
+	for _, next := range []string{
+		"https://api.github.com/repositories/56/issues?state=all&per_page=100&page=2",
+		"https://api.github.com/repositories/55/pulls?state=all&per_page=100&page=2",
+		"https://api.github.com/repositories/55/issues?state=open&per_page=100&page=2",
+		"https://api.github.com/repositories/55/issues?state=all&per_page=100&after=x&after=y",
+		"https://api.github.com/repositories/55/issues?state=all&per_page=100&page=-1",
+	} {
+		if _, err := nextPage("<"+next+">; rel=\"next\"", current.URL, "/repositories/55/issues"); err == nil {
+			t.Fatalf("unsafe alias/cursor accepted: %s", next)
+		}
+	}
+}
+
+func TestMinimumEvidenceExpansionAndScope(t *testing.T) {
+	f := newFixture(t)
+	g := newGitHub("read", "read-secret", "reviewer/shoal-station")
+	g.client = client(f)
+	w := reviewruntime.SemanticWork{ReviewerNodeID: 11, ReviewerNodeFullName: "reviewer/shoal-station", PolicyPath: "README.md", Items: []reviewruntime.WorkItem{{Issue: 1, TargetRepositoryID: 55, TargetFullName: "alice/project", TargetCommit: basis, PolicyCommit: basis}}}
+	e, err := Collect(context.Background(), g, w)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := strings.Repeat("設計與驗證", 200)
+	full := map[string]json.RawMessage{}
+	full["body"], _ = json.Marshal(body)
+	index := historyIndex(full, "history:0:0")
+	if !json.Valid(index["body"]) || index["bodyOmittedBytes"] == nil {
+		t.Fatal("long Unicode body not safely disclosed")
+	}
+	e.Items[0].History.Collections[0].FullRecords = []map[string]json.RawMessage{full}
+	e.Items[0].History.Collections[0].Records = []map[string]json.RawMessage{index}
+	if err := expandEvidence(context.Background(), g, &e, []evidenceRequest{{Issue: 1, Ref: "history:0:0"}, {Issue: 1, Ref: "file:README.md"}}); err != nil {
+		t.Fatal(err)
+	}
+	var recovered string
+	json.Unmarshal(e.Items[0].ExpandedHistory[0]["body"], &recovered)
+	if recovered != body {
+		t.Fatal("full requested history lost")
+	}
+	for _, request := range []evidenceRequest{{Issue: 2, Ref: "file:README.md"}, {Issue: 1, Ref: "file:../../secret"}, {Issue: 1, Ref: "https://evil.invalid"}, {Issue: 1, Ref: "history:0:99"}} {
+		if err := expandEvidence(context.Background(), g, &e, []evidenceRequest{request}); err == nil {
+			t.Fatalf("accepted unobserved scope: %+v", request)
 		}
 	}
 }

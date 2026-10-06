@@ -25,12 +25,20 @@ type Evidence struct {
 	Items []ItemEvidence             `json:"items"`
 }
 type ItemEvidence struct {
-	History   HistoryEvidence `json:"history"`
-	Issue     int             `json:"issue"`
-	Policy    FileEvidence    `json:"policy"`
-	Files     []FileEvidence  `json:"targetFiles"`
-	Omitted   int             `json:"omittedBlobCount"`
-	Selection string          `json:"selection"`
+	History         HistoryEvidence              `json:"history"`
+	Issue           int                          `json:"issue"`
+	Policy          FileEvidence                 `json:"policy"`
+	Files           []FileEvidence               `json:"targetFiles"`
+	Omitted         int                          `json:"omittedBlobCount"`
+	Selection       string                       `json:"selection"`
+	AvailableFiles  []FileReference              `json:"availableFiles"`
+	ExpandedHistory []map[string]json.RawMessage `json:"expandedHistory,omitempty"`
+}
+
+type FileReference struct {
+	Path string `json:"path"`
+	Blob string `json:"blob"`
+	Size int    `json:"size"`
 }
 
 func getJSON(ctx context.Context, reads reviewruntime.GitHub, endpoint string, out any) error {
@@ -131,6 +139,9 @@ func Collect(ctx context.Context, reads reviewruntime.GitHub, work reviewruntime
 				continue
 			}
 			blobs++
+			if (file.Mode == "100644" || file.Mode == "100755") && file.Size >= 0 && file.Size <= 128_000 && sha.MatchString(file.SHA) {
+				ie.AvailableFiles = append(ie.AvailableFiles, FileReference{file.Path, file.SHA, file.Size})
+			}
 			if file.Mode != "100644" && file.Mode != "100755" || file.Size < 0 || file.Size > 16_000 || len(ie.Files) >= 24 || total+file.Size > 192_000 || priority(file.Path) > 3 {
 				continue
 			}
