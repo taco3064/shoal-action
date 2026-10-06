@@ -9,9 +9,9 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const hosted = resolve(root, 'hosted-review');
 const recordPath = resolve(root, 'hosted-source-package.json');
-const commit = '257d957d72e8457ed2adbd5d5e02d686885d19dd';
-const tree = 'c27b0dba2d282c6c55bef1f1894d85144241d0ae';
-const moduleVersion = 'v0.11.1';
+const commit = 'd7e0e1fb7efdd8923ed46a493147299d8e629f0f';
+const tree = '0af19296794f8c1d523120ea3d7e4bb9f069fba9';
+const moduleVersion = 'v0.11.2';
 const hash = (b) => createHash('sha256').update(b).digest('hex');
 async function inventory(directory) {
   const files = {};
@@ -52,7 +52,7 @@ export async function verifyHosted(source, { packageCandidate = false, directory
   for (const [path, digest] of Object.entries(upstreamFiles)) {
     assert.equal(hash(execFileSync('git', ['-C', source, 'show', `${commit}:${path}`])), digest, `Stale or hand-edited runtime: ${path}`);
   }
-  for (const [local, upstream] of [['reviewer-summary-f01.yml', 'reviewer-summary-f01.yml'], ['reviewer-summary-human-first.yml', 'reviewer-summary-human-first.yml'], ['review-request.yml', 'review-request.yml'], ['reviewer-summary-current.yml', 'reviewer-summary-current.yml'], ['reviewer-summary-hosted.yml', 'reviewer-summary-hosted.yml'], ['reviewer-summary-final-hosted.yml', 'reviewer-summary-final-hosted.yml']]) {
+  for (const [local, upstream] of [['reviewer-summary-f02.yml', 'reviewer-summary-f02.yml'], ['reviewer-summary-f01.yml', 'reviewer-summary-f01.yml'], ['reviewer-summary-human-first.yml', 'reviewer-summary-human-first.yml'], ['review-request.yml', 'review-request.yml'], ['reviewer-summary-current.yml', 'reviewer-summary-current.yml'], ['reviewer-summary-hosted.yml', 'reviewer-summary-hosted.yml'], ['reviewer-summary-final-hosted.yml', 'reviewer-summary-final-hosted.yml']]) {
     assert.equal(hash(await readFile(resolve(directory, 'testdata', local))), hash(execFileSync('git', ['-C', source, 'show', `${commit}:reviewruntime/testdata/${upstream}`])));
   }
   // Reproduce exclusively from the identity-checked source checkout. This also

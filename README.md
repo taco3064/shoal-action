@@ -129,9 +129,9 @@ These commands use only read-only public GitHub API requests (optional `GITHUB_T
 
 ## Hosted minimum sufficient evidence
 
-The Hosted adapter distributes `gh-shoal` v0.11.1 from commit
-`257d957d72e8457ed2adbd5d5e02d686885d19dd`, tree
-`c27b0dba2d282c6c55bef1f1894d85144241d0ae`. Its integrity inventory is
+The Hosted adapter distributes `gh-shoal` v0.11.2 from commit
+`d7e0e1fb7efdd8923ed46a493147299d8e629f0f`, tree
+`0af19296794f8c1d523120ea3d7e4bb9f069fba9`. Its integrity inventory is
 `hosted-source-package.json`. Admission and review comments use the shared
 human-first evidence envelope: visible prose is presentation, while the single
 versioned machine record remains authoritative. Malformed formal envelopes
