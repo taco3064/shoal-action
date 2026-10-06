@@ -28,16 +28,22 @@ func newGitHub(role, token, station string) *GitHub {
 }
 
 var issueTail = regexp.MustCompile(`^issues/[1-9][0-9]*$`)
+var verificationPath = regexp.MustCompile(`^repos/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/(?:commits/[a-f0-9]{40}/check-runs|compare/[a-f0-9]{40}\.\.\.[A-Za-z0-9_.-]+:[a-f0-9]{40})$`)
 var readPath = regexp.MustCompile(`^(repositories/[1-9][0-9]*|users/[A-Za-z0-9_.-]+/repos|repos/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:/(?:issues(?:/comments|/[1-9][0-9]*(?:/comments)?)?|pulls(?:/comments)?|releases|commits|branches/.+|git/ref/heads/.+|git/commits/[a-f0-9]{40}|git/trees/[a-f0-9]{40}|git/blobs/[a-f0-9]{40}|contents/.+))?)$`)
 
 func (g *GitHub) allowed(r reviewruntime.Request) bool {
 	u, err := url.Parse(r.Endpoint)
-	if err != nil || u.IsAbs() || u.Host != "" || strings.HasPrefix(u.Path, "/") || strings.Contains(u.Path, "..") || strings.Contains(u.Path, "\\") || u.Fragment != "" {
+	if err != nil || u.IsAbs() || u.Host != "" || strings.HasPrefix(u.Path, "/") || strings.Contains(u.Path, "\\") || u.Fragment != "" {
 		return false
+	}
+	for _, segment := range strings.Split(u.Path, "/") {
+		if segment == "." || segment == ".." {
+			return false
+		}
 	}
 	path := u.Path
 	if g.Role == "read" {
-		return r.Method == "GET" && len(r.Fields) == 0 && readPath.MatchString(path)
+		return r.Method == "GET" && len(r.Fields) == 0 && (readPath.MatchString(path) || verificationPath.MatchString(path))
 	}
 	if u.RawQuery != "" || r.Paginate {
 		return false

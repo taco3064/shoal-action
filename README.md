@@ -130,7 +130,7 @@ records per collection: all-state Issues and PRs (including closed/merged),
 Issue discussion, inline PR comments, releases, and commits anchored at the
 reviewed commit. Repository metadata includes fork, archive and maintenance
 fields. This is a disclosed evidence window, not an exhaustive history audit.
-Counts alone are not review criteria. Mutable history carries its observation
+Pinned-commit check runs and an immutable parent-head comparison for forks provide targeted CI and fork-specific evidence. Counts alone are not review criteria. Mutable history carries its observation
 time and endpoint; Policy and target files remain pinned to immutable Git blobs.
 
 Initial bodies are UTF-8 excerpts with explicit omitted-byte counts and stable

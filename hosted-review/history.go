@@ -16,10 +16,11 @@ var errEvidenceIncomplete = errors.New("evidence exceeds complete collection bud
 // History is observed GitHub state, not immutable Git content. Preserve that
 // distinction and endpoint provenance instead of calling it a commit snapshot.
 type HistoryEvidence struct {
-	ObservedAt  string                     `json:"observedAt"`
-	Selection   string                     `json:"selection"`
-	Repository  map[string]json.RawMessage `json:"repository"`
-	Collections []HistoryCollection        `json:"collections"`
+	ObservedAt   string                     `json:"observedAt"`
+	Selection    string                     `json:"selection"`
+	Repository   map[string]json.RawMessage `json:"repository"`
+	Collections  []HistoryCollection        `json:"collections"`
+	Verification map[string]any             `json:"verification"`
 }
 
 type HistoryCollection struct {
@@ -75,6 +76,11 @@ func collectHistory(ctx context.Context, reads reviewruntime.GitHub, fullName, c
 		return h, errors.New("repository evidence missing")
 	}
 	h.Repository = projectRecord(repository, []string{"id", "full_name", "html_url", "description", "fork", "parent", "archived", "created_at", "updated_at", "pushed_at", "homepage", "default_branch"})
+	var verificationErr error
+	h.Verification, verificationErr = collectVerification(ctx, reads, fullName, commit, repository)
+	if verificationErr != nil {
+		return h, verificationErr
+	}
 	common := []string{"id", "number", "html_url", "title", "body", "state", "state_reason", "created_at", "updated_at", "closed_at", "merged_at", "merge_commit_sha", "issue_url", "pull_request_url", "commit_id", "path", "diff_hunk", "in_reply_to_id"}
 	sources := []struct {
 		path string
