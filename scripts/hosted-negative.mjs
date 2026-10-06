@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { verifyHosted } from './hosted-package.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = process.argv[2];
-for (const control of ['runtime-edit', 'runtime-omission', 'runtime-addition', 'copilot-pin', 'adapter-edit', 'module-replace', 'vendor-module-metadata', 'hosted-fixture-edit', 'final-caller-edit']) {
+for (const control of ['runtime-edit', 'runtime-omission', 'runtime-addition', 'copilot-pin', 'adapter-edit', 'module-replace', 'vendor-module-metadata', 'hosted-fixture-edit', 'final-caller-edit', 'human-first-caller-edit']) {
   const temp = await mkdtemp(resolve(tmpdir(), 'shoal-host-negative-'));
   try {
     const directory = resolve(temp, 'hosted-review');
@@ -26,6 +26,7 @@ for (const control of ['runtime-edit', 'runtime-omission', 'runtime-addition', '
     }
     if (control === 'vendor-module-metadata') await writeFile(resolve(directory, 'vendor/modules.txt'), '# untrusted module\n');
     if (control === 'hosted-fixture-edit') await writeFile(resolve(directory, 'testdata/reviewer-summary-hosted.yml'), 'untrusted caller\n');
+    if (control === 'human-first-caller-edit') await writeFile(resolve(directory, 'testdata/reviewer-summary-human-first.yml'), 'untrusted human-first caller\n');
     if (control === 'final-caller-edit') await writeFile(resolve(directory, 'testdata/reviewer-summary-final-hosted.yml'), 'untrusted final caller\n');
     await assert.rejects(() => verifyHosted(source, { directory }), `Control did not reject ${control}`);
     console.log(`PASS hosted negative: ${control}`);

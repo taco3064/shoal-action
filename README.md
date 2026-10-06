@@ -129,6 +129,15 @@ These commands use only read-only public GitHub API requests (optional `GITHUB_T
 
 ## Hosted minimum sufficient evidence
 
+The Hosted adapter distributes `gh-shoal` v0.11.0 from commit
+`980d9eaecb820c32d3693aea487a3b3029ed254e`, tree
+`540b914ed13ce97841ae0685fd36c7e1179bcaa5`. Its integrity inventory is
+`hosted-source-package.json`. Admission and review comments use the shared
+human-first evidence envelope: visible prose is presentation, while the single
+versioned machine record remains authoritative. Malformed formal envelopes
+refuse before effects; editing visible prose cannot change a judgment or Star.
+The root Summary Action retains its independently verified source and payload.
+
 Hosted Copilot remains tool-isolated. The read-only host starts with 20 recent
 records per collection: all-state Issues and PRs (including closed/merged),
 Issue discussion, inline PR comments, releases, and commits anchored at the

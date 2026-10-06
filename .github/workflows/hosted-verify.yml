@@ -37,7 +37,7 @@ jobs:
         run: |
           git init "$RUNNER_TEMP/gh-shoal-source"
           git -C "$RUNNER_TEMP/gh-shoal-source" remote add origin https://github.com/taco3064/gh-shoal.git
-          git -C "$RUNNER_TEMP/gh-shoal-source" fetch --depth=1 origin 230a97af21c45b8d8f0cdcd4a02d13dddd2c4730
+          git -C "$RUNNER_TEMP/gh-shoal-source" fetch --depth=1 origin 980d9eaecb820c32d3693aea487a3b3029ed254e
           git -C "$RUNNER_TEMP/gh-shoal-source" checkout --detach FETCH_HEAD
       - name: Complete source correspondence and stale-byte negative controls
         run: |
