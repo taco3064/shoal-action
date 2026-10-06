@@ -41,7 +41,7 @@ type fixture struct {
 func newFixture(t *testing.T) *fixture {
 	t.Helper()
 	f := &fixture{t: t, state: "open", head: basis, policy: "Return PASS if the Target README contains READY. Otherwise return FAIL. Explain the decisive repository evidence.", comments: []map[string]any{}, managed: map[string]string{}}
-	for _, name := range []string{"review-request.yml", "reviewer-summary-human-first.yml"} {
+	for _, name := range []string{"review-request.yml", "reviewer-summary-f01.yml"} {
 		b, e := os.ReadFile("testdata/" + name)
 		if e != nil {
 			t.Fatal(e)
