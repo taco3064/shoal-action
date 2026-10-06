@@ -31,72 +31,97 @@ export function encodeEvidenceDocument(record, presentation = {}) {
     // Escaping HTML also prevents presentation text from injecting machine sentinels.
     return JSON.stringify(document).replace(/[<>&]/gu, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
 }
-// Recognition is only a diagnostic for rejected evidence. It supplies no record,
-// admission identity or workload completion, and never reads presentation prose.
-export function hasIdentifiableResultEvidence(body) {
-    const markers = [...body.matchAll(/<!-- shoal-evidence:v\d+:(?:start|end) -->/gu)];
-    return markers.some((marker, index) => {
-        const next = markers[index + 1];
-        if (!marker[0].endsWith(':start -->')) {
-            return false;
-        }
-        const payload = completeMachineObject(body.slice(marker.index + marker[0].length, next?.index));
-        try {
-            JSON.parse(payload);
-            return containsResultType(payload);
-        }
-        catch {
-            return false;
-        }
-    });
-}
-function completeMachineObject(payload) {
-    const tokens = payload.trim().match(/"(?:[^"\\]|\\.)*"|[{}\[\]:,]|[^\s{}\[\]:,]+/gu) ?? [];
-    let depth = 0;
-    if (tokens[0] !== '{') {
-        return '';
+export function getInvalidResultEvidence(body) {
+    // GitHub comments are smaller than this bound; depth is bounded separately.
+    const bounded = body.slice(0, 131072);
+    const markers = [...bounded.matchAll(/<!-- shoal-evidence:v\d+:(?:start|end) -->/gu)];
+    const records = markers.flatMap((marker, index) => marker[0].endsWith(':start -->')
+        ? readMachineFields(bounded.slice(marker.index + marker[0].length, markers[index + 1]?.index))
+        : []);
+    const identifiable = records.some((fields) => fields.get('type')?.some((value) => reviewProtocol.event.judgmentTypes.some((type) => type === value)));
+    if (!identifiable) {
+        return null;
     }
-    for (let index = 0; index < tokens.length; index += 1) {
-        if (tokens[index] === '{' || tokens[index] === '[') {
-            depth += 1;
-        }
-        else if (tokens[index] === '}' || tokens[index] === ']') {
-            depth -= 1;
-            if (depth === 0) {
-                return tokens.slice(0, index + 1).join(' ');
-            }
-        }
-    }
-    return '';
+    return {
+        kind: 'invalid-formal-result',
+        initialReviewEvidence: records.length === 1 ? initialIdentity(records[0]) : null,
+    };
 }
-function containsResultType(payload) {
-    const tokens = payload.match(/"(?:[^"\\]|\\.)*"|[{}\[\]:,]|[^\s{}\[\]:,]+/gu) ?? [];
+function initialIdentity(fields) {
+    const types = fields.get('type');
+    const reviewer = fields.get('reviewerNodeId');
+    const target = fields.get('targetRepositoryId');
+    // Duplicate identities/types are ambiguous; never select a winning value.
+    if (types?.length !== 1 || types[0] !== 'REVIEWED'
+        || (reviewer?.length ?? 0) > 1 || (target?.length ?? 0) > 1) {
+        return null;
+    }
+    return { reviewerNodeId: reviewer?.[0], targetRepositoryId: target?.[0] };
+}
+function machineTokens(payload) {
+    const tokens = [];
+    const token = /\s*("(?:[^"\\\u0000-\u001f]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*"|[{}\[\]:,]|[^\s{}\[\]:,"]+)/guy;
+    let match;
+    while ((match = token.exec(payload)) !== null) {
+        tokens.push(match[1]);
+    }
+    return tokens;
+}
+function readMachineFields(payload) {
+    const tokens = machineTokens(payload);
     const scopes = [];
-    // JSON.parse already established syntax. Inspect every direct record.type,
-    // including duplicate keys, without selecting a winning ambiguous record.
+    const records = [];
+    let fields;
+    if (tokens[0] !== '{') {
+        return records;
+    }
     for (let index = 0; index < tokens.length; index += 1) {
         const token = tokens[index];
         const scope = scopes.at(-1);
         if (token === '{' || token === '[') {
-            const path = scope ? [...scope.path, scope.object ? scope.key : '[]'] : [];
-            scopes.push({ path, key: '', object: token === '{' });
+            if (scopes.length >= 64) {
+                break;
+            }
+            const directRecord = token === '{' && scopes.length === 1
+                && scope?.key === 'record' && scope.valueIndex === index;
+            scopes.push({ object: token === '{', directRecord, key: '', valueIndex: -1 });
+            if (directRecord) {
+                fields = new Map();
+                records.push(fields);
+            }
         }
         else if (token === '}' || token === ']') {
-            scopes.pop();
-        }
-        else if (token.startsWith('"') && scope?.object) {
-            const value = String(JSON.parse(token));
-            if (tokens[index + 1] === ':') {
-                scope.key = value;
+            if (!scope || scope.object !== (token === '}')) {
+                break;
             }
-            else if (scope.path.length === 1 && scope.path[0] === 'record'
-                && scope.key === 'type'
-                && reviewProtocol.event.judgmentTypes.some((type) => type === value)) {
-                return true;
+            scopes.pop();
+            if (scopes.length === 0) {
+                break;
+            }
+        }
+        else if (scope?.object && token.startsWith('"') && tokens[index + 1] === ':'
+            && tokens[index - 1] !== ':') {
+            scope.key = String(JSON.parse(token));
+            scope.valueIndex = index + 2;
+            if (scope.directRecord && fields
+                && ['type', 'reviewerNodeId', 'targetRepositoryId'].includes(scope.key)) {
+                const values = fields.get(scope.key) ?? [];
+                values.push(machineScalar(tokens[index + 2]));
+                fields.set(scope.key, values);
             }
         }
     }
-    return false;
+    return records;
+}
+function machineScalar(token) {
+    // An observed but unreadable identity is null, never an absent wildcard.
+    try {
+        const value = JSON.parse(token ?? 'null');
+        return typeof value === 'string' || typeof value === 'number' ? value : null;
+    }
+    catch {
+        return null;
+    }
 }
 function isObject(value) {
     return typeof value === 'object' && value !== null && !Array.isArray(value);

@@ -19,6 +19,14 @@ export const hostedCapabilities = [{
         runtimeSourceCommit: '980d9eaecb820c32d3693aea487a3b3029ed254e',
         runtimeSourceTree: '540b914ed13ce97841ae0685fd36c7e1179bcaa5',
         brokerFormatVersion: 1,
+    }, {
+        callerDigest: '08c07806fa86966739e14c6ad62c75e7f91210ae565072fa327b5ab7dc830c59',
+        auxiliaryDigest: 'cc91666c5bf39398a3635e9e16d8daf1a0e8860ae83dfb4b8baa57da395a6934',
+        actionCommit: '1c975c0ba9b7b41b2093bcf04d65b6c1df8c658a',
+        actionPath: 'hosted-review/',
+        runtimeSourceCommit: '257d957d72e8457ed2adbd5d5e02d686885d19dd',
+        runtimeSourceTree: 'c27b0dba2d282c6c55bef1f1894d85144241d0ae',
+        brokerFormatVersion: 1,
     }];
 export function resolveHostedCapability(callerDigest, auxiliaryDigest) {
     if (!callerDigest || !allowedSummaryWorkflows.has(callerDigest)) {

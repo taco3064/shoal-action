@@ -19,6 +19,7 @@ const current = { ...legacy, summarySchemaVersion: 2, metrics: { ...legacy.metri
 assert.deepEqual(validateReviewerSummary(current, v2), current);
 // Exact historical bindings retain their own schemas; no future generation is admitted.
 const schema2Digests = new Set([
+  '08c07806fa86966739e14c6ad62c75e7f91210ae565072fa327b5ab7dc830c59',
   '0dee3b797307225e38b475e0456cff6434ca53c4b0580fb3f4a11dfdc5eece35',
   'b9162cae864bbd6e00745346f37f701fe5c003d3367cc3dc37c6fb394f9d8105',
   'f6cda44c7e6e12117dac3c1f1c145bb69283eb3cfe66690ba67adddd3b4e89bd',
@@ -33,7 +34,9 @@ assert.deepEqual([...allowedSummaryWorkflows.keys()].sort(), [
 for (const [digest, binding] of allowedSummaryWorkflows) {
   if (schema2Digests.has(digest)) {
     assert.deepEqual(binding.reviewerSummary, v2);
-    assert.equal(binding.actionCommit, digest.startsWith('0dee3b79')
+    assert.equal(binding.actionCommit, digest.startsWith('08c07806')
+      ? 'bd75984561987d390413a176cd8e7982aee2cb9a'
+      : digest.startsWith('0dee3b79')
       ? '47e1c3ab5762d66e6f49c3f2a15c133a9785679c'
       : '4918e1afe85f15f8fe263eaf2866cd02a1f70a62');
     assert.deepEqual(validateReviewerSummary(current, binding.reviewerSummary), current);

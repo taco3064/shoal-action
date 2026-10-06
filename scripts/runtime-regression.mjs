@@ -261,6 +261,32 @@ for (const body of [canonical(judgment()) + canonical(judgment()),
   }, { ...initialMetrics, reviewBackedStarCount: 0, invalidReviewCommentCount: 1,
     pendingReviewRequestCount: 1, completedReviewRequestCount: 0 }]);
 }
+const damagedMachine = '<!-- shoal-evidence:v1:start -->\n{"formatVersion":1,"record":{"type":"REVIEWED","reviewerNodeId":200,"targetRepositoryId":300,';
+const invalidPending = { ...initialMetrics, reviewBackedStarCount: 0, invalidReviewCommentCount: 1,
+  pendingReviewRequestCount: 1, completedReviewRequestCount: 0 };
+for (const type of ['REVIEWED', 'RE_REVIEWED', 'STAR_REVOKED', 'REVOKED_EXTERNALLY']) {
+  scenarios.push([`F-02 damaged ${type} increments I without authority`, (r) => {
+    r[commentsPath][1].body = damagedMachine.replace('REVIEWED', type);
+  }, invalidPending]);
+}
+scenarios.push(
+  ['F-02 damaged Initial preserves prior-initial lifecycle', (r) => {
+    r[commentsPath][1].body = damagedMachine;
+    r[commentsPath].push(comment(judgment(), false, 3));
+  }, { ...invalidPending, invalidReviewCommentCount: 2 }],
+  ['F-02 damaged Initial on open thread never completes workload', (r) => {
+    r[commentsPath][1].body = damagedMachine;
+    r[commentsPath].push(comment(judgment(), false, 3));
+    r[issuesPath][0].state = 'open';
+  }, { ...invalidPending, invalidReviewCommentCount: 0 }],
+  ['F-02 wrong identity does not block a legitimate Initial', (r) => {
+    r[commentsPath][1].body = damagedMachine.replace('300', '999');
+    r[commentsPath].push(comment(judgment(), false, 3));
+  }, { ...initialMetrics, invalidReviewCommentCount: 1 }],
+  ['F-02 truncated Admission and nested fake type stay non-authoritative', (r) => {
+    r[commentsPath][1].body = '<!-- shoal-evidence:v1:start -->{"record":{"reviewerNodeId":200,"nested":{"type":"REVIEWED",';
+  }, { ...invalidPending, invalidReviewCommentCount: 0 }],
+);
 for (const [name, mutate, metrics] of scenarios) {
   // Root really is non-fork with no parent; the direct fork differs only in Membership.
   const actualRoot = await run(repository(), mutate);
