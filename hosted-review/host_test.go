@@ -145,6 +145,13 @@ func (f *fixture) api(r *http.Request) (*http.Response, error) {
 		return response(200, repo(12, "alice/shoal-station", requester, true))
 	case p == "repos/alice/project" || p == "repositories/55":
 		return response(200, target)
+	case p == "repos/alice/project/issues" || p == "repos/alice/project/pulls":
+		if r.URL.Query().Get("state") != "all" {
+			f.t.Fatal("history must include closed Issues and PRs")
+		}
+		return response(200, []any{})
+	case p == "repos/alice/project/issues/comments" || p == "repos/alice/project/pulls/comments" || p == "repos/alice/project/releases" || p == "repos/alice/project/commits":
+		return response(200, []any{})
 	case p == "repositories/1379044983":
 		return response(200, root)
 	case strings.HasPrefix(p, "users/"):
@@ -215,6 +222,7 @@ if(kind==='tool'){console.log(JSON.stringify({type:'assistant.message',data:{too
 if(kind==='missing')process.exit(0);
 if(kind==='malformed'){console.log('{');process.exit(0)}
 let results=[{issue:1,verdict:kind==='FAIL'?'FAIL':'PASS',comment:'README evidence at the supplied immutable basis.'}];
+if(kind==='insufficient')results={status:'INSUFFICIENT_EVIDENCE',reason:'Required source was omitted from the evidence selection.'};
 if(kind==='duplicate')results.push(results[0]);if(kind==='foreign')results[0].issue=999;if(kind==='unusable')results[0].verdict='MAYBE';
 console.log(JSON.stringify({type:'assistant.message',data:{phase:'final_answer',content:JSON.stringify(results)}}));
 console.log(JSON.stringify({type:'result',exitCode:0}));
@@ -275,6 +283,96 @@ func TestSemanticFailuresLeavePending(t *testing.T) {
 				t.Fatalf("failure became judgment: %+v comments=%v", o, f.comments)
 			}
 		})
+	}
+}
+
+func TestInsufficientEvidencePreservesEndorsementAndPending(t *testing.T) {
+	f := newFixture(t)
+	f.star = true
+	o := run(context.Background(), config(t, "insufficient"), client(f))
+	if !strings.Contains(strings.Join(o.Failures, ","), "EVIDENCE_INCOMPLETE") || !o.StopSemanticWork || f.state != "open" || !f.star || len(f.comments) != 1 {
+		t.Fatalf("insufficient evidence became a judgment or changed endorsement: %+v", o)
+	}
+}
+
+func TestHistoryCollectsClosedAndMergedAcrossPages(t *testing.T) {
+	g := newGitHub("read", "read-secret", "reviewer/station")
+	g.client = &http.Client{Transport: transportFunc(func(r *http.Request) (*http.Response, error) {
+		body := `[]`
+		header := http.Header{}
+		switch r.URL.Path {
+		case "/repos/alice/project":
+			body = `{"id":55,"full_name":"alice/project","fork":false,"archived":false}`
+		case "/repos/alice/project/issues":
+			if r.URL.Query().Get("state") != "all" {
+				t.Fatal("open-only issue history")
+			}
+			body = `[{"number":1,"state":"open","body":"current work"}]`
+			if r.URL.Query().Get("page") == "2" {
+				body = `[{"number":2,"state":"closed","body":"design decision #3","html_url":"https://github.com/alice/project/issues/2"}]`
+			} else {
+				next := *r.URL
+				q := next.Query()
+				q.Set("page", "2")
+				next.RawQuery = q.Encode()
+				header.Set("Link", "<"+next.String()+">; rel=\"next\"")
+			}
+		case "/repos/alice/project/pulls":
+			if r.URL.Query().Get("state") != "all" {
+				t.Fatal("open-only PR history")
+			}
+			body = `[{"number":3,"state":"closed","merged_at":"2026-01-01T00:00:00Z","body":"Fixes #2; validation and tradeoffs"}]`
+		case "/repos/alice/project/issues/comments":
+			body = `[{"id":4,"body":"decision discussion","issue_url":"https://api.github.com/repos/alice/project/issues/2"}]`
+		case "/repos/alice/project/commits":
+			if r.URL.Query().Get("sha") != basis {
+				t.Fatal("commit history not anchored")
+			}
+		}
+		return &http.Response{StatusCode: 200, Header: header, Body: io.NopCloser(strings.NewReader(body)), Request: r}, nil
+	})}
+	h, err := collectHistory(context.Background(), g, "alice/project", basis)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := json.Marshal(h)
+	for _, required := range []string{"design decision #3", "merged_at", "Fixes #2", "decision discussion", `"fork":false`} {
+		if !strings.Contains(string(b), required) {
+			t.Fatalf("lost evidence %s", required)
+		}
+	}
+	if len(h.Collections) != 6 || len(h.Collections[0].Records) != 2 {
+		t.Fatalf("incomplete history: %+v", h)
+	}
+}
+
+func TestHistoryFailureCannotBecomeFAIL(t *testing.T) {
+	for _, path := range []string{"project/issues", "project/pulls", "project/releases", "project/commits"} {
+		t.Run(path, func(t *testing.T) {
+			f := newFixture(t)
+			f.failPath = path
+			f.star = true
+			o := run(context.Background(), config(t, "FAIL"), client(f))
+			if !o.StopSemanticWork || f.state != "open" || !f.star || len(f.comments) != 1 {
+				t.Fatalf("history failure became FAIL: %+v", o)
+			}
+		})
+	}
+}
+
+func TestHistoryBudgetLeavesPendingWithoutFalseFAIL(t *testing.T) {
+	f := newFixture(t)
+	f.star = true
+	httpClient := &http.Client{Transport: transportFunc(func(r *http.Request) (*http.Response, error) {
+		if r.URL.Path == "/repos/alice/project/issues" {
+			data, _ := json.Marshal([]map[string]any{{"number": 2, "state": "closed", "body": strings.Repeat("x", 750_001)}})
+			return &http.Response{StatusCode: 200, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(string(data))), Request: r}, nil
+		}
+		return f.api(r)
+	})}
+	o := run(context.Background(), config(t, "FAIL"), httpClient)
+	if !strings.Contains(strings.Join(o.Failures, ","), "EVIDENCE_INCOMPLETE") || f.state != "open" || !f.star || len(f.comments) != 1 {
+		t.Fatalf("history bound silently became negative judgment: %+v", o)
 	}
 }
 func TestMissingAuthorityNoAmbientFallback(t *testing.T) {

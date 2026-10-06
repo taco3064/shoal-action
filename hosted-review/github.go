@@ -27,7 +27,7 @@ func newGitHub(role, token, station string) *GitHub {
 }
 
 var issueTail = regexp.MustCompile(`^issues/[1-9][0-9]*$`)
-var readPath = regexp.MustCompile(`^(repositories/[1-9][0-9]*|users/[A-Za-z0-9_.-]+/repos|repos/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:/(?:issues(?:/[1-9][0-9]*(?:/comments)?)?|commits|branches/.+|git/ref/heads/.+|git/commits/[a-f0-9]{40}|git/trees/[a-f0-9]{40}|git/blobs/[a-f0-9]{40}|contents/.+))?)$`)
+var readPath = regexp.MustCompile(`^(repositories/[1-9][0-9]*|users/[A-Za-z0-9_.-]+/repos|repos/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:/(?:issues(?:/comments|/[1-9][0-9]*(?:/comments)?)?|pulls(?:/comments)?|releases|commits|branches/.+|git/ref/heads/.+|git/commits/[a-f0-9]{40}|git/trees/[a-f0-9]{40}|git/blobs/[a-f0-9]{40}|contents/.+))?)$`)
 
 func (g *GitHub) allowed(r reviewruntime.Request) bool {
 	u, err := url.Parse(r.Endpoint)
@@ -68,6 +68,7 @@ func (g *GitHub) Do(ctx context.Context, r reviewruntime.Request) ([]byte, error
 	}
 	endpoint := "https://api.github.com/" + r.Endpoint
 	var pages []json.RawMessage
+	totalBytes := 0
 	seen := map[string]bool{}
 	for page := 0; page < 1000; page++ {
 		if seen[endpoint] {
@@ -109,6 +110,11 @@ func (g *GitHub) Do(ctx context.Context, r reviewruntime.Request) ([]byte, error
 		}
 		if !r.Paginate {
 			return data, nil
+		}
+		totalBytes += len(data)
+		if totalBytes > 16_000_000 {
+			g.failed()
+			return nil, errEvidenceIncomplete
 		}
 		var collection []json.RawMessage
 		if json.Unmarshal(data, &collection) != nil || strings.TrimSpace(string(data)) == "null" {

@@ -86,8 +86,13 @@ func (c *Copilot) Judge(ctx context.Context, w reviewruntime.SemanticWork) ([]by
 	if !strings.HasPrefix(string(version), "GitHub Copilot CLI "+CopilotVersion+".\n") {
 		return fail("COPILOT_VERSION_MISMATCH")
 	}
-	evidence, err := Collect(ctx, c.Reads, w)
+	collectionContext, collectionCancel := context.WithTimeout(ctx, c.Timeout)
+	defer collectionCancel()
+	evidence, err := Collect(collectionContext, c.Reads, w)
 	if err != nil {
+		if errors.Is(err, errEvidenceIncomplete) {
+			return fail("EVIDENCE_INCOMPLETE")
+		}
 		return fail("GITHUB_READ_UNAVAILABLE")
 	}
 	// Use stdin rather than argv: policy/Target bytes can exceed OS argument limits.
@@ -194,6 +199,13 @@ func DecodeEvents(data []byte) ([]byte, string) {
 	}
 	if !json.Valid([]byte(final)) {
 		return nil, "COPILOT_RESULT_MALFORMED"
+	}
+	var abstention struct {
+		Status string `json:"status"`
+		Reason string `json:"reason"`
+	}
+	if json.Unmarshal([]byte(final), &abstention) == nil && abstention.Status == "INSUFFICIENT_EVIDENCE" {
+		return nil, "EVIDENCE_INCOMPLETE"
 	}
 	// Correspondence, duplicates, verdict and explanation validation belong to
 	// the shared runtime, including independently usable partial results.

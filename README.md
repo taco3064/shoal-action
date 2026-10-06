@@ -122,3 +122,35 @@ Only tag verification is automated; GitHub Release / Marketplace publication rem
    `publication_completed` requires a public stable Release and the explicit owner's Marketplace confirmation. The flag records an owner observation; it is not an automated Marketplace probe or Shoal trust admission. Without it, even a public GitHub Release remains publication-pending. Keep this distribution lifecycle evidence outside Reviewer Summary / Network Projection schemas.
 
 These commands use only read-only public GitHub API requests (optional `GITHUB_TOKEN` for rate limits). A required read failure refuses the check. Distribution recovery, release deletion/de-listing, supplementary CI provenance, and component versions cannot change the Action SHA accepted by `shoal-app`. Reviewer Summary Artifact Attestation and the canonical Summary Workflow trust envelope remain mandatory independently.
+
+## Hosted evidence completeness
+
+Hosted Copilot remains tool-isolated. The read-only host collects the target's
+all-state Issue and PR bodies (including closed Issues and merged/closed PRs),
+repository-wide Issue discussion and inline PR comments, releases, and commit
+history anchored at the reviewed commit. Repository metadata includes fork,
+parent, archive and maintenance fields. Each history collection records its API
+endpoint; the observation timestamp distinguishes mutable GitHub history from
+immutable Policy/target Git blobs. Counts alone are not review criteria.
+
+Collections follow pagination to completion. API errors, malformed pages and
+collection timeouts stop semantic work. History has a 750,000-byte projected
+budget per target; the entire evidence batch is bounded to 1,000,000 bytes, and
+paginated transport to 16,000,000 bytes per request. Exceeding a bound produces
+`EVIDENCE_INCOMPLETE`, never a silently truncated history or a FAIL judgment.
+Large repositories may therefore remain Pending; this change does not claim
+that bounded Hosted input equals an unrestricted local agent's investigation.
+
+Target files still use the disclosed 24-file/192KB selection. When that selection
+or uncollected evidence prevents evaluating a required criterion, Copilot may
+return `{"status":"INSUFFICIENT_EVIDENCE","reason":"specific evidence needed"}`.
+The host turns this into `EVIDENCE_INCOMPLETE` before the shared runtime can apply
+any judgment. The whole batch remains pending; existing Stars and formal review
+events are preserved. FAIL requires an evidenced Policy violation, not evidence
+missing because the platform did not supply it. Release metadata does not by
+itself prove a working deployment. PR review-submission summaries and deployment
+checks are not included in these collections and must not be inferred absent.
+
+This adapter update does not rewrite prior review events or repin deployed
+Station workflows. New exact Action pins and their app trust admission remain a
+separate rollout step after candidate validation.
