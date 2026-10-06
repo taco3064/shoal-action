@@ -3,9 +3,47 @@ package hosted
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"strings"
 	"testing"
 )
+
+// Optional output lets Platform acceptance use real adapter-produced comments
+// with its authoritative TypeScript parser, without copying a codec here.
+func TestHostedEvidenceHandoff(t *testing.T) {
+	f := newFixture(t)
+	c := config(t, "PASS")
+	if o := run(context.Background(), c, client(f)); o.Runtime.Status != "COMPLETED" {
+		t.Fatal(o)
+	}
+	f.head = changed
+	c.Operation = "re-review"
+	if o := run(context.Background(), c, client(f)); o.Runtime.Status != "COMPLETED" {
+		t.Fatal(o)
+	}
+	f.head = strings.Repeat("c", 40)
+	c = config(t, "FAIL")
+	c.Operation = "re-review"
+	if o := run(context.Background(), c, client(f)); o.Runtime.Status != "COMPLETED" || f.star {
+		t.Fatalf("FAIL revocation did not converge: %+v", o)
+	}
+	if len(f.comments) != 4 {
+		t.Fatalf("expected Admission, Initial Review, Re-review and revocation: %v", f.comments)
+	}
+	if path := os.Getenv("SHOAL_HOSTED_EVIDENCE_OUTPUT"); path != "" {
+		bodies := make([]string, len(f.comments))
+		for i, comment := range f.comments {
+			bodies[i] = comment["body"].(string)
+		}
+		data, err := json.MarshalIndent(bodies, "", "  ")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, append(data, '\n'), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
 
 // Inspect test output only. Production rendering/parsing remains entirely in
 // the integrity-locked shared runtime; the adapter has no evidence codec.
