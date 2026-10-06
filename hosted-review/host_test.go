@@ -579,6 +579,25 @@ func TestTransportDecodingNeverUsesFailureJudgment(t *testing.T) {
 		t.Fatal(got)
 	}
 }
+
+func TestRedactedInputEchoCannotBreakSemanticDecoding(t *testing.T) {
+	echo := `{"type":"user.message","data":{"content":"Authorization: ******" broken echo"}}` + "\n"
+	final := `{"type":"assistant.message","data":{"phase":"final_answer","content":"{\"evidenceRequests\":[{\"issue\":27,\"ref\":\"history:0:0\"}]}"}}` + "\n"
+	completed := `{"type":"result","exitCode":0}`
+	result, code := DecodeEvents([]byte(echo + final + completed))
+	if code != "" || !json.Valid(result) || !strings.Contains(string(result), "evidenceRequests") {
+		t.Fatalf("redacted echo blocked valid request: %s %s", code, result)
+	}
+	for _, broken := range []string{
+		`{"type":"assistant.message","data":{"phase":"final_answer","content":"bad" broken"}}`,
+		`{"type":"tool.execution_start","data":{}}`,
+		`{"type":"unknown","data":"broken" nope}`,
+	} {
+		if result, code := DecodeEvents([]byte(echo + broken + "\n" + final + completed)); code == "" || result != nil {
+			t.Fatal("non-echo error or tool event bypassed validation")
+		}
+	}
+}
 func TestOutcomeNeverContainsCredentials(t *testing.T) {
 	f := newFixture(t)
 	f.failPath = "user"

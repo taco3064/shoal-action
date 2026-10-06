@@ -170,11 +170,27 @@ func ClassifyFailure(text string) string {
 	}
 	return "COPILOT_PROCESS_FAILURE"
 }
+func semanticEventStream(data []byte) []byte {
+	// Copilot emits NDJSON. Its secret redactor can invalidate escaping in the
+	// echoed user.message (e.g. a public workflow Authorization header). That
+	// echo is not semantic output. Drop only this explicitly typed, single-line
+	// input echo; all other events and the final answer stay strictly decoded.
+	var events bytes.Buffer
+	for _, line := range bytes.Split(data, []byte("\n")) {
+		if bytes.HasPrefix(bytes.TrimSpace(line), []byte(`{"type":"user.message",`)) {
+			continue
+		}
+		events.Write(line)
+		events.WriteByte('\n')
+	}
+	return events.Bytes()
+}
+
 func DecodeEvents(data []byte) ([]byte, string) {
 	if len(bytes.TrimSpace(data)) == 0 {
 		return nil, "COPILOT_RESULT_MISSING"
 	}
-	dec := json.NewDecoder(bytes.NewReader(data))
+	dec := json.NewDecoder(bytes.NewReader(semanticEventStream(data)))
 	finals, completions := 0, 0
 	var final string
 	for {

@@ -94,7 +94,7 @@ func evidenceInstructions(round int) string {
 }
 
 func semanticExplanation(events []byte) string {
-	decoder := json.NewDecoder(strings.NewReader(string(events)))
+	decoder := json.NewDecoder(strings.NewReader(string(semanticEventStream(events))))
 	for decoder.More() {
 		var event struct {
 			Type string
