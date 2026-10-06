@@ -31,6 +31,73 @@ export function encodeEvidenceDocument(record, presentation = {}) {
     // Escaping HTML also prevents presentation text from injecting machine sentinels.
     return JSON.stringify(document).replace(/[<>&]/gu, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
 }
+// Recognition is only a diagnostic for rejected evidence. It supplies no record,
+// admission identity or workload completion, and never reads presentation prose.
+export function hasIdentifiableResultEvidence(body) {
+    const markers = [...body.matchAll(/<!-- shoal-evidence:v\d+:(?:start|end) -->/gu)];
+    return markers.some((marker, index) => {
+        const next = markers[index + 1];
+        if (!marker[0].endsWith(':start -->')) {
+            return false;
+        }
+        const payload = completeMachineObject(body.slice(marker.index + marker[0].length, next?.index));
+        try {
+            JSON.parse(payload);
+            return containsResultType(payload);
+        }
+        catch {
+            return false;
+        }
+    });
+}
+function completeMachineObject(payload) {
+    const tokens = payload.trim().match(/"(?:[^"\\]|\\.)*"|[{}\[\]:,]|[^\s{}\[\]:,]+/gu) ?? [];
+    let depth = 0;
+    if (tokens[0] !== '{') {
+        return '';
+    }
+    for (let index = 0; index < tokens.length; index += 1) {
+        if (tokens[index] === '{' || tokens[index] === '[') {
+            depth += 1;
+        }
+        else if (tokens[index] === '}' || tokens[index] === ']') {
+            depth -= 1;
+            if (depth === 0) {
+                return tokens.slice(0, index + 1).join(' ');
+            }
+        }
+    }
+    return '';
+}
+function containsResultType(payload) {
+    const tokens = payload.match(/"(?:[^"\\]|\\.)*"|[{}\[\]:,]|[^\s{}\[\]:,]+/gu) ?? [];
+    const scopes = [];
+    // JSON.parse already established syntax. Inspect every direct record.type,
+    // including duplicate keys, without selecting a winning ambiguous record.
+    for (let index = 0; index < tokens.length; index += 1) {
+        const token = tokens[index];
+        const scope = scopes.at(-1);
+        if (token === '{' || token === '[') {
+            const path = scope ? [...scope.path, scope.object ? scope.key : '[]'] : [];
+            scopes.push({ path, key: '', object: token === '{' });
+        }
+        else if (token === '}' || token === ']') {
+            scopes.pop();
+        }
+        else if (token.startsWith('"') && scope?.object) {
+            const value = String(JSON.parse(token));
+            if (tokens[index + 1] === ':') {
+                scope.key = value;
+            }
+            else if (scope.path.length === 1 && scope.path[0] === 'record'
+                && scope.key === 'type'
+                && reviewProtocol.event.judgmentTypes.some((type) => type === value)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 function isObject(value) {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

@@ -88,13 +88,13 @@
     },
     {
       "path": "src/protocol/services/hosted_capability/index.js",
-      "sha256": "4d02164551f04c86c10656ce6f27a8a9470833f8cdfc7accb21ad460d60f6aa5",
-      "size": 1166
+      "sha256": "78f846beaa14b7ab16ed7f3e3459e792859c1e27a818543bbaf433e91b4a3a4f",
+      "size": 1638
     },
     {
       "path": "src/protocol/services/network_compatibility/index.js",
-      "sha256": "1839238325176d09f6a2fc365e61049a90bee15fbd7b902f1572879934a9fbed",
-      "size": 3543
+      "sha256": "db2f44b1a412b40c21d6f97ed0e6f2cef99988bda370030759f5e18d678bca00",
+      "size": 3893
     },
     {
       "path": "src/protocol/services/review_protocol/contract.js",
@@ -108,8 +108,8 @@
     },
     {
       "path": "src/protocol/services/review_protocol/evidence_document.js",
-      "sha256": "ba9deaf53ae0e90262d687188d536619f1cb0aa0a0a7224e1b8ce83e923109ce",
-      "size": 2502
+      "sha256": "73138447a878b1da6696c011c5206613da887bcf764bc118bc440d69ddfd0245",
+      "size": 5080
     },
     {
       "path": "src/protocol/services/review_protocol/index.js",
@@ -128,8 +128,8 @@
     },
     {
       "path": "src/protocol/services/review_protocol/review_protocol.js",
-      "sha256": "0b7cc970f3fd2e6815eef7fec64309477bc79fe37851c60e0670150eadb736cf",
-      "size": 6939
+      "sha256": "5f01179f6fc61c59a244892d3808dd672d2d0b10f9540fddfd078c419334e778",
+      "size": 7129
     },
     {
       "path": "src/protocol/services/review_protocol/rfc3339.js",

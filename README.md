@@ -8,7 +8,7 @@ Hosted Review's invocation, authority roles, failure contract, provenance and do
 
 ## Human-first evidence generation
 
-The root Summary distribution now consumes shoal-app#65, source commit `94947abae5f90b5b18233f2ad6d710fe5cd247d9`, tree `eb818036210d02243fdf968044334fb5e174639d`. Its package manifest SHA-256 is `3db6da4a8ea77eaa54c1bf630dfd492248c0aa217762208819c9ff1100ba1bd6`. Canonical evidence format 1 keeps Protocol 1 / Summary Schema 2 and existing S/R/Q/I/P/C semantics. Hosted Review remains on its independently recorded source until shoal-action#18. The immutable verified root Action commit is the shoal-station#26 Stage A handoff.
+The root Summary distribution repairs F-01 (shoal-app#72), source commit `e2573b64fec5c3a1714cc4a319068a70926e0224`, tree `ea81c324c05a79b31e284c1afec34166b17bf9a7`. Its package manifest SHA-256 is `937e24e711db482836dafc0de1d58c8374fffa94d4d9f7bb4e980d0ed60a97c2`. Canonical evidence format 1 keeps Protocol 1 / Summary Schema 2 and existing S/R/Q/I/P/C semantics. Identifiable invalid canonical result envelopes increment I once on closed canonical threads without becoming valid judgments or completing work. Hosted Review retains its independently recorded source. The immutable verified root Action commit is the shoal-station#26 Stage A handoff.
 
 ## Usage
 

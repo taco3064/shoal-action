@@ -249,6 +249,18 @@ for (const body of ['Review Result: PASS', 'REVIEWED', JSON.stringify(judgment()
     r[commentsPath][1].body = body; r[issuesPath][0].state = 'open';
   }, { ...initialMetrics, reviewBackedStarCount: 0, pendingReviewRequestCount: 1, completedReviewRequestCount: 0 }]);
 }
+for (const body of [canonical(judgment()) + canonical(judgment()),
+  canonical(judgment()).replace('"formatVersion":1', '"formatVersion":99'),
+  canonical(judgment()).replaceAll('shoal-evidence:v1:', 'shoal-evidence:v99:'),
+  canonical(judgment()).replace('"formatVersion":1', '"formatVersion":1,"formatVersion":1'),
+  canonical(judgment()).replace('<!-- shoal-evidence:v1:end -->', ''),
+]) {
+  scenarios.push(['F-01 closed canonical invalid result increments I once', (r) => {
+    r[commentsPath][1].body = body;
+    r[issuesPath][0].state = 'closed';
+  }, { ...initialMetrics, reviewBackedStarCount: 0, invalidReviewCommentCount: 1,
+    pendingReviewRequestCount: 1, completedReviewRequestCount: 0 }]);
+}
 for (const [name, mutate, metrics] of scenarios) {
   // Root really is non-fork with no parent; the direct fork differs only in Membership.
   const actualRoot = await run(repository(), mutate);
