@@ -223,6 +223,10 @@ if(kind==='missing')process.exit(0);
 if(kind==='malformed'){console.log('{');process.exit(0)}
 let results=[{issue:1,verdict:kind==='FAIL'?'FAIL':'PASS',comment:'README evidence at the supplied immutable basis.'}];
 if(kind==='insufficient')results={status:'INSUFFICIENT_EVIDENCE',reason:'Required source was omitted from the evidence selection.'};
+if(kind.startsWith('retrieve')) {
+  const evidence=JSON.parse(prompt.split('Evidence:\n')[1].split('\nUse the minimum')[0]);
+  if(kind!=='retrieve' || evidence.items[0].targetFiles.length===1) results={evidenceRequests:[{issue:1,ref:kind==='retrieve-foreign'?'file:../../secret':'file:README.md'}]};
+}
 if(kind==='duplicate')results.push(results[0]);if(kind==='foreign')results[0].issue=999;if(kind==='unusable')results[0].verdict='MAYBE';
 console.log(JSON.stringify({type:'assistant.message',data:{phase:'final_answer',content:JSON.stringify(results)}}));
 console.log(JSON.stringify({type:'result',exitCode:0}));
@@ -544,6 +548,25 @@ func TestMinimumEvidenceExpansionAndScope(t *testing.T) {
 		if err := expandEvidence(context.Background(), g, &e, []evidenceRequest{request}); err == nil {
 			t.Fatalf("accepted unobserved scope: %+v", request)
 		}
+	}
+}
+
+func TestSemanticRetrievalLifecycleAndRefusals(t *testing.T) {
+	for _, kind := range []string{"retrieve", "retrieve-foreign", "retrieve-loop"} {
+		t.Run(kind, func(t *testing.T) {
+			f := newFixture(t)
+			f.star = true
+			c := config(t, kind)
+			c.Timeout = 5 * time.Second
+			o := run(context.Background(), c, client(f))
+			if kind == "retrieve" {
+				if o.Runtime.Status != "COMPLETED" || !f.star || f.state != "closed" {
+					t.Fatalf("retrieved evidence did not reach shared judgment: %+v", o)
+				}
+			} else if !strings.Contains(strings.Join(o.Failures, ","), "EVIDENCE_INCOMPLETE") || !f.star || f.state != "open" || len(f.comments) != 1 {
+				t.Fatalf("invalid/exhausted retrieval changed judgment: %+v", o)
+			}
+		})
 	}
 }
 func TestTransportDecodingNeverUsesFailureJudgment(t *testing.T) {
